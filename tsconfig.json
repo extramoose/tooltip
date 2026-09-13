@@ -1,0 +1,21 @@
+{
+  // Declaration generation only. The source is and stays vanilla JS - this file
+  // exists so `npm run types` can turn the JSDoc in index.js into index.d.ts.
+  // `checkJs` is off on purpose: type-checking hand-written JS internals is a
+  // different job from emitting the public surface, and it would gate the build
+  // on inference noise in code that runs fine. `strict` stays on because it is
+  // what makes the emitted types null-correct for strict consumers.
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2022", "dom"],
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "skipLibCheck": true
+  },
+  "include": ["index.js"]
+}

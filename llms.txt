@@ -1,0 +1,185 @@
+# @extramoose/tooltip
+
+> A tooltip that rides the cursor. It follows the pointer, and when it runs out of room it flips to the other side rather than hanging off the edge. Vanilla JavaScript, no dependencies, 4.8 kB gzipped, MIT.
+
+This file is the complete reference. Everything below is enough to use the library without reading anything else.
+
+- Demo: https://tooltip.hah.to/
+- Docs: https://tooltip.hah.to/docs/
+- Source: https://github.com/extramoose/tooltip
+- npm: https://www.npmjs.com/package/@extramoose/tooltip
+
+## Install
+
+```sh
+npm i @extramoose/tooltip
+```
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@extramoose/tooltip@1"></script>
+```
+
+## Usage
+
+The script tag form initialises itself. Add `data-tip` to any element and it works.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@extramoose/tooltip@1"></script>
+<span data-tip="Rides the cursor">hover me</span>
+```
+
+It takes its options off the tag: `data-selector`, `data-touch`, `data-delay`, `data-theme`, `data-boundary`. The instance it makes is `Tooltip.tip`, so `Tooltip.tip.hide()` works.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@extramoose/tooltip@1" data-touch="press"></script>
+```
+
+The module form does not initialise itself. Call `createTooltip()` once.
+
+```js
+import createTooltip from '@extramoose/tooltip';
+
+const tip = createTooltip();
+tip.hide();      // dismiss whatever is showing
+tip.destroy();   // remove every listener and the pill itself
+```
+
+Events are delegated from the root, so elements added to the DOM later work without re-initialising. Styles are injected on the first `createTooltip()` call, not at import.
+
+## Attributes
+
+- `data-tip` - the text. Required, unless `data-tip-overflow` is supplying it. Rendered with `textContent`, so no HTML.
+- `data-tip-key` - a keyboard shortcut, rendered as a `<kbd class="hah-tip__key">` chip after the text. Plain text, same as `data-tip`. The chip is tinted from the pill's own text color with `color-mix`, so it works on a light page and a dark one; `--tip-key-bg` overrides that.
+- `data-tip-pos` - `left` (default), `right` or `center`. Which side of the cursor the pill prefers. The boundary gets the last word.
+- `data-tip-overflow` - show the pill only when the element is actually clipped, tested as `scrollWidth > clientWidth`. The text is `data-tip` if there is one, otherwise the element's own text. The truncated table cell.
+- `data-tip-theme` - a name copied onto the pill for a `[data-tip-theme="name"]` CSS block you write. The library ships no named themes.
+
+```html
+<button data-tip="Save the draft" data-tip-key="⌘S">Save</button>
+<td class="truncate" data-tip-overflow>content-security-policy-report-only</td>
+```
+
+`data-tip-press` is written by the library, not by you: it marks the trigger under a finger during a long press, and the injected CSS uses it to turn off text selection and the iOS link callout.
+
+## Options
+
+`createTooltip(options)` returns `{ hide(), show(el), destroy() }`.
+
+- `selector` - `'[data-tip],[data-tip-overflow]'`. The trigger selector.
+- `root` - `document`. The delegation root. Pass an element to scope an instance to one subtree.
+- `offset` - `{ x: 10, y: 16 }`. Gap from the cursor, in px.
+- `delay` - `150`. Milliseconds a cold hover waits before the pill shows. The cursor keeps being tracked meanwhile, so the pill lands under the pointer rather than where it entered. Walking from one trigger straight onto the next is never delayed, and coming back to any trigger within `delay` of leaving is instant. Focus is never delayed.
+- `touch` - unset, which means a long press on anything that is not a link. `'press'` for links too, `'tap'` for tap-to-toggle, `'off'` for nothing. On devices with no cursor.
+- `theme` - none. A default `data-tip-theme` for every pill this instance shows. A trigger's own attribute wins.
+- `boundary` - the viewport. An element or selector the pill stays inside: a modal, a scroll container, a panel. Re-read every frame.
+- `injectStyles` - `true`. Set `false` to ship the CSS yourself, from the exported `css` string or `@extramoose/tooltip/tooltip.css`. For a `style-src` CSP without `'unsafe-inline'`.
+
+`hide()` dismisses whatever is showing, and cancels a pending delay or a press in progress. `show(el)` raises the pill anchored to `el` the way a tap would, until `hide()`, a tap elsewhere or a scroll; it is for feedback like "Copied!" on a phone, and is a no-op when that element's pill is already up (change its `data-tip` instead). `destroy()` removes every listener and the pill itself.
+
+Nothing visual is an option. The look and the motion are CSS custom properties.
+
+## Styling
+
+One theme ships. It reads the page and goes dark on a light page and light on a dark one, via `prefers-color-scheme`. If the page has its own switch, set `data-theme="light"` or `data-theme="dark"` on `<html>` and the tooltip follows that instead.
+
+Override from `:root` or from a `[data-tip-theme]` block. Not from a wrapper around the trigger: the pill is appended to `document.body`, so a wrapper is not its ancestor.
+
+```css
+:root {
+  --tip-bg: #1d1f24;
+  --tip-radius: 10px;
+}
+
+[data-tip-theme="danger"] {
+  --tip-bg: #b3261e;
+}
+```
+
+All nineteen properties, with defaults:
+
+- `--tip-bg` - `#14151a` (`#fff` on a dark page)
+- `--tip-color` - `#fff` (`#14151a` on a dark page)
+- `--tip-border` - `0`
+- `--tip-radius` - `18px`
+- `--tip-padding` - `10px 16px`
+- `--tip-shadow` - `0 4px 14px rgb(16 18 24 / .13)`
+- `--tip-font-family` - the system sans stack
+- `--tip-font-size` - `.88rem`
+- `--tip-font-weight` - `600`
+- `--tip-letter-spacing` - `.01em`
+- `--tip-line-height` - `1.45`
+- `--tip-max-width` - `min(320px, 72vw)`
+- `--tip-z` - `9999`
+- `--tip-scale` - `.85`. Where the enter spring starts from.
+- `--tip-transition` - `opacity .16s ease, transform .18s cubic-bezier(.3, 1.5, .5, 1)`. The whole motion.
+- `--tip-offset-x` - `10px`. Read back by the script, so plain px.
+- `--tip-offset-y` - `16px`. Read back by the script, so plain px.
+- `--tip-margin` - `8px`. Minimum gap to the boundary edge. Read back by the script, so plain px.
+- `--tip-key-bg` - `color-mix(in srgb, currentColor 16%, transparent)`. The `data-tip-key` chip's background.
+
+## Motion
+
+The pill springs up out of the corner nearest the cursor and collapses back into the same one on the way out. Walking straight from one trigger onto the next keeps the pill up and swaps the text rather than blinking out and back. Transform and opacity only.
+
+`prefers-reduced-motion: reduce` turns the transition off. The pill still follows the cursor; following is the component, not decoration.
+
+## Accessibility
+
+The tooltip shows on keyboard focus (`:focus-visible`) as well as hover, anchored under the element. `Escape` dismisses it.
+
+`data-tip` is wired with `aria-describedby`, which is a description, not an accessible name. An icon-only button still needs a name of its own:
+
+```html
+<!-- wrong: announced as "button" -->
+<button data-tip="Copy"><svg></svg></button>
+
+<!-- right -->
+<button aria-label="Copy" data-tip="Copy to clipboard"><svg></svg></button>
+```
+
+An `aria-describedby` the trigger already had is preserved, appended to on show, and restored on hide.
+
+## Touch
+
+There is no cursor on a touch device, so the default is a long press. A finger held on a trigger for 400 ms shows an element-anchored pill above it, centred, since the hand is in the way below; letting go leaves it up. A tap elsewhere or any scroll dismisses it, and tapping the trigger itself dismisses it and lets that tap through. The click the browser fires when the pressing finger lifts is swallowed: the person asked what the button does, not for it to do it. Moving more than 10 px during the hold cancels it, since that is a scroll. The context menu is suppressed for the length of the hold. A plain tap is never touched.
+
+Links are the exception by default: a long press on a link is also how iOS previews it, so links keep theirs, and each link present when touch mode engages gets a hidden description node wired with `aria-describedby` instead. `touch: 'press'` takes the long press on links as well.
+
+`touch: 'tap'` enables tap-to-toggle: the first tap shows an element-anchored pill and suppresses the click, the second tap dismisses it and lets the click through. A tap elsewhere, or any scroll, dismisses it. It costs the first click on every trigger, where press costs nothing.
+
+Both touch modes put the pill above the element, and flip it below only when there is no room above. Keyboard focus still sits below the element. `place()` takes the preference as `opts.vside`, `'below'` by default.
+
+`touch: 'off'` shows nothing on touch; every trigger present when that mode engages gets the hidden description node instead. Triggers added afterwards do not.
+
+Detection is `(hover: hover) and (pointer: fine)`, re-checked when the input changes.
+
+## Details
+
+Live text: change `data-tip` or `data-tip-key` on the trigger while its pill is up and the pill re-fills and re-places itself. That is the "Copy" to "Copied" case. It is a MutationObserver, pointed at the active trigger only.
+
+Alt-tab and hidden tabs: `blur` on the window and a `visibilitychange` to hidden both dismiss the pill, so nothing is left stranded on a page nobody is looking at.
+
+Native `title` lift: pass a selector that matches `title` and the first hover moves that element's `title` into `data-tip` and removes the `title`, so the browser's own tooltip never shows.
+
+```js
+createTooltip({ selector: '[data-tip], [title]' });
+```
+
+It is not on by default, because it would turn every `title` on the page into a pill.
+
+Disabled triggers: a `<button disabled data-tip>` raises the pill in Chromium, which has fired mouse events on disabled form controls since 116. Firefox and Safari have historically swallowed those events, and that is unverified. Put `data-tip` on a wrapping `<span>` if you need it in every browser.
+
+## How it works
+
+`place()` is exported and pure: numbers in, numbers out, no DOM.
+
+```js
+import { place } from '@extramoose/tooltip';
+place(cx, cy, w, h, vw, vh, prev, opts) // -> { x, y, side, vside, origin }
+```
+
+Flip first, then clamp. The flip is asymmetric: leaving a side that does not fit is cheap, coming back costs a third of the pill's own extent in spare room, which is what stops a cursor dragged along an edge from making the pill ping-pong.
+
+## When to use something else
+
+For element-anchored tooltips, arrows, interactive content or nesting, use Floating UI or tippy.js. This library solves one placement problem, a pill that follows the pointer, and has no opinion about the rest.

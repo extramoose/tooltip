@@ -1,0 +1,823 @@
+<!doctype html>
+<!--
+  @extramoose/tooltip - the demo.
+
+  One hand-written file, no build step: it imports ./index.js off disk, so
+  this is the shipped library running. The reference lives in docs/.
+
+  DEPLOY NOTE: this page sits at the repository root beside the library it
+  imports, so GitHub Pages serves it with Settings > Pages > branch: main,
+  folder: / and the demo lands at the repo's own URL. Nothing it references
+  is outside the published tree.
+
+  Locally:  python3 -m http.server  ->  http://localhost:8000/
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@extramoose/tooltip - the tooltip that rides the cursor</title>
+<meta name="description" content="A vanilla-JS tooltip that follows the cursor, flips before it runs off the edge, and stays out of the way. No dependencies, accessible, 4.8 kB.">
+<meta name="color-scheme" content="light dark">
+<meta name="author" content="Hunter Hastings">
+<link rel="canonical" href="https://tooltip.hah.to/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tooltip.hah.to/">
+<meta property="og:title" content="@extramoose/tooltip - the tooltip that rides the cursor">
+<meta property="og:description" content="Follows the cursor, flips before it runs off the edge, and stays out of the way. No dependencies, accessible, 4.8 kB of vanilla JS.">
+<meta property="og:image" content="https://tooltip.hah.to/og.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta property="og:image:alt" content="A tooltip with personality. A dark pill reading &quot;Rides the cursor, and never runs off the edge&quot; sits beside a cursor.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@hah">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "@extramoose/tooltip",
+  "description": "A tooltip that rides the cursor. It follows the pointer, and when it runs out of room it flips to the other side rather than hanging off the edge. No dependencies, 4.8 kB of vanilla JS.",
+  "url": "https://tooltip.hah.to/",
+  "codeRepository": "https://github.com/extramoose/tooltip",
+  "programmingLanguage": "JavaScript",
+  "runtimePlatform": "Browser",
+  "license": "https://opensource.org/license/mit",
+  "author": { "@type": "Person", "name": "Hunter Hastings", "url": "https://hah.to" }
+}
+</script>
+<meta name="theme-color" content="#fcfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%230f1116"/><rect x="5" y="11" width="22" height="10" rx="5" fill="%23fff"/></svg>'>
+
+<style>
+/* ============================================================ design tokens */
+:root{
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --bg:      #fcfcfc;
+  --bg-2:    #ffffff;
+  --bg-3:    #f3f3f4;
+  --stage:   #f1f1f3;
+  --dot:     rgb(16 18 24 / .10);
+  --fg:      #0f1116;
+  --fg-2:    #575d66;
+  --fg-3:    #888e98;
+  --line:    rgb(16 18 24 / .10);
+  --line-2:  rgb(16 18 24 / .16);
+  --accent:  #2f56cc;
+  --accent-soft: rgb(47 86 204 / .10);
+  --ok:      #0a7048;
+  --shadow:  0 1px 2px rgb(16 18 24 / .04), 0 10px 28px rgb(16 18 24 / .06);
+
+  --col: 48rem;            /* the reading column */
+  --wide: 68rem;           /* the canvas */
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:      #0a0a0b;
+    --bg-2:    #101114;
+    --bg-3:    #17181c;
+    --stage:   #0d0e11;
+    --dot:     rgb(255 255 255 / .07);
+    --fg:      #f1f2f4;
+    --fg-2:    #a1a7b0;
+    --fg-3:    #6f757e;
+    --line:    rgb(255 255 255 / .10);
+    --line-2:  rgb(255 255 255 / .18);
+    --accent:  #7d9dff;
+    --accent-soft: rgb(125 157 255 / .14);
+    --ok:      #4ad395;
+    --shadow:  0 1px 2px rgb(0 0 0 / .5), 0 12px 32px rgb(0 0 0 / .4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:      #0a0a0b;
+  --bg-2:    #101114;
+  --bg-3:    #17181c;
+  --stage:   #0d0e11;
+  --dot:     rgb(255 255 255 / .07);
+  --fg:      #f1f2f4;
+  --fg-2:    #a1a7b0;
+  --fg-3:    #6f757e;
+  --line:    rgb(255 255 255 / .10);
+  --line-2:  rgb(255 255 255 / .18);
+  --accent:  #7d9dff;
+  --accent-soft: rgb(125 157 255 / .14);
+  --ok:      #4ad395;
+  --shadow:  0 1px 2px rgb(0 0 0 / .5), 0 12px 32px rgb(0 0 0 / .4);
+}
+
+/* ==================================================================== reset */
+*,*::before,*::after{ box-sizing:border-box }
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth }
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:400 1rem/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+h1,p{ margin:0 }
+button{ font:inherit; color:inherit }
+a{ color:inherit; text-underline-offset:.18em; text-decoration-color:var(--line-2) }
+a:hover{ text-decoration-color:currentColor }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:5px }
+::selection{ background:var(--accent-soft) }
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto }
+  *,*::before,*::after{ animation-duration:.001ms !important; transition-duration:.001ms !important }
+}
+
+/* =================================================================== layout */
+.col{ width:100%; max-width:var(--col); margin-inline:auto; padding-inline:clamp(20px,5vw,30px) }
+.col--wide{ max-width:var(--wide) }
+main > section{ padding-block:clamp(30px,5vw,56px) }
+main > section + section{ padding-top:0 }
+
+/* ===================================================================== type */
+h1{
+  font-size:clamp(2.1rem,6.4vw,3.4rem); line-height:1.03;
+  letter-spacing:-.04em; font-weight:600;
+}
+.lead{ font-size:clamp(1.02rem,2.2vw,1.1rem); color:var(--fg-2) }
+.lead code{ font-size:.86em }
+p{ color:var(--fg-2); max-width:36em }
+code:not(pre code){
+  font-family:var(--mono); font-size:.86em;
+  background:var(--bg-3); border:1px solid var(--line);
+  border-radius:5px; padding:.08em .34em; color:var(--fg);
+  overflow-wrap:break-word;
+}
+
+/* =================================================================== header
+   The mark is the HAH wordmark in currentColor, so it inverts with the page. */
+.top{ border-bottom:1px solid var(--line); background:var(--bg) }
+.top__in{ display:flex; align-items:center; gap:14px; padding-block:14px }
+.mark{ display:inline-flex; align-items:center; text-decoration:none; flex:0 0 auto }
+.mark svg{ display:block; height:22px; width:auto }
+.top__nav{ margin-left:auto; display:flex; align-items:center; gap:16px; flex:0 0 auto }
+.top__nav a{ font-size:.8125rem; color:var(--fg-2); text-decoration:none }
+.top__nav a:hover{ color:var(--fg) }
+
+/* ==================================================================== intro */
+.intro{ text-align:center; padding-block:clamp(34px,7vw,96px) clamp(22px,3vw,34px) }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:7px; margin-bottom:22px;
+  padding:5px 10px; border-radius:4px; border:1px solid var(--line);
+  background:var(--bg-2); color:var(--fg-2); text-decoration:none;
+  font-family:var(--mono); font-size:.75rem; letter-spacing:-.01em;
+  transition:color .14s ease, border-color .14s ease;
+}
+.eyebrow svg{ width:13px; height:13px; display:block; fill:currentColor }
+.eyebrow:hover{ color:var(--fg); border-color:var(--fg-3) }
+.intro__in{ width:100%; max-width:40rem; margin-inline:auto; padding-inline:clamp(20px,5vw,30px) }
+.intro h1{ margin-inline:auto; max-width:16ch }
+.intro .lead{ margin:18px auto 0; max-width:30em }
+.intro .spec{ margin:9px auto 0; font-size:.8125rem; color:var(--fg-3) }
+
+/* --------------------------------------------------------- the install line */
+.oneline{
+  margin:24px auto 0; max-width:23rem; min-width:0;
+  display:flex; align-items:center; gap:10px;
+  padding:8px 8px 8px 13px;
+  border:1px solid var(--line); border-radius:11px;
+  background:var(--bg-2); box-shadow:var(--shadow);
+}
+.oneline code{
+  font-family:var(--mono); font-size:.8125rem; white-space:pre; text-align:left;
+  overflow-x:auto; flex:1 1 auto; min-width:0; scrollbar-width:none;
+  background:none; border:0; padding:0;
+  -webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 20px), transparent);
+  mask-image:linear-gradient(90deg, #000 calc(100% - 20px), transparent);
+}
+.oneline code::-webkit-scrollbar{ display:none }
+
+/* ================================================================ the stage
+   `.panel` is handed to the library as its `boundary`, so its box is where
+   the pill stops. Everything inside it is furniture for a tooltip to hang
+   off: a toolbar, an avatar, a status, a gear. None of it does anything. */
+.canvas{
+  width:100%; margin-inline:auto;
+  border:1px solid var(--line-2); border-radius:16px;
+  background:var(--bg-2); box-shadow:var(--shadow); overflow:hidden;
+}
+.canvas__bar{ display:flex; align-items:center; padding:11px 15px; border-bottom:1px solid var(--line) }
+.dots{ display:flex; gap:7px }
+.dots i{ width:11px; height:11px; border-radius:50%; background:var(--bg-3); box-shadow:inset 0 0 0 1px var(--line-2) }
+
+.panel{
+  position:relative; overflow:hidden;
+  height:clamp(340px,60vw,560px);
+  background:var(--stage);
+  background-image:radial-gradient(circle at 1px 1px, var(--dot) 1px, transparent 0);
+  background-size:22px 22px;
+}
+@media (min-width:900px){ .panel{ height:clamp(420px,46vh,560px) } }
+
+/* The field. The canvas carries the three colours the shader samples as
+   ordinary properties, so it can read them back resolved rather than
+   parsing the tokens by hand, and the background doubles as its backdrop
+   before the first frame lands. */
+.field{
+  position:absolute; inset:0; z-index:0; display:block;
+  width:100%; height:100%; pointer-events:none;
+  color:var(--fg); background:var(--stage); border:0 solid var(--dot);
+}
+/* No WebGL: the same idea in CSS, a light travelling through the grid. */
+.beam{ display:none }
+.panel.is-flat .field{ display:none }
+.panel.is-flat .beam{
+  display:block; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--fg) 32%, transparent) 1px, transparent 0);
+  background-size:22px 22px;
+  -webkit-mask-image:radial-gradient(circle 190px at var(--mx,50%) var(--my,42%), #000, transparent 72%);
+  mask-image:radial-gradient(circle 190px at var(--mx,50%) var(--my,42%), #000, transparent 72%);
+  opacity:calc(.3 + .7 * var(--lit, .3));
+}
+.panel.is-flat .beam::after{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(circle 260px at var(--mx,50%) var(--my,42%), color-mix(in srgb, var(--fg) 6%, transparent), transparent 74%);
+}
+
+/* ------------------------------------------------------------- the furniture */
+.bar{
+  position:absolute; z-index:1; top:14px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:2px; padding:4px;
+  border:1px solid var(--line); border-radius:12px;
+  background:var(--bg-2); box-shadow:var(--shadow);
+}
+.bar__sep{ width:1px; height:18px; margin-inline:5px; background:var(--line); flex:0 0 auto }
+.ib{
+  appearance:none; display:grid; place-items:center; cursor:default;
+  width:32px; height:30px; padding:0; border:0; border-radius:8px;
+  background:transparent; color:var(--fg-2);
+  transition:background .14s ease, color .14s ease;
+}
+.ib:hover{ background:var(--bg-3); color:var(--fg) }
+.ib svg{
+  width:17px; height:17px; display:block;
+  fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;
+}
+.who{
+  position:absolute; z-index:1; top:14px; right:14px;
+  display:grid; place-items:center; cursor:default;
+  width:30px; height:30px; padding:0; border-radius:50%;
+  border:1px solid var(--line-2); background:var(--bg-2); color:var(--fg-2);
+  font-size:.6875rem; font-weight:600; letter-spacing:.02em;
+  transition:color .14s ease, border-color .14s ease;
+}
+.who:hover{ color:var(--fg); border-color:var(--fg-3) }
+.state{
+  position:absolute; z-index:1; left:14px; bottom:14px;
+  display:inline-flex; align-items:center; gap:7px; cursor:default;
+  padding:7px 12px 7px 10px; border-radius:999px;
+  border:1px solid var(--line); background:var(--bg-2); color:var(--fg-2);
+  font-size:.75rem; line-height:1;
+  transition:color .14s ease, border-color .14s ease;
+}
+.state:hover{ color:var(--fg); border-color:var(--fg-3) }
+.doc{ left:14px; top:14px; bottom:auto; padding-inline:12px }
+.state span{ width:6px; height:6px; border-radius:50%; background:var(--ok); flex:0 0 auto }
+.gear{
+  position:absolute; z-index:1; right:14px; bottom:14px;
+  width:34px; height:32px; border-radius:10px;
+  border:1px solid var(--line); background:var(--bg-2); box-shadow:var(--shadow);
+}
+.gear:hover{ background:var(--bg-2); color:var(--fg); border-color:var(--fg-3) }
+@media (max-width:430px){
+  .bar{ top:12px; gap:0; padding:3px }
+  .ib{ width:29px; height:28px }
+  .ib svg{ width:16px; height:16px }
+  .who{ top:12px; right:12px }
+  .state{ left:12px; bottom:12px }
+  .gear{ right:12px; bottom:12px }
+}
+/* A phone gets the stage and nothing else: no window bar, no shadow, no
+   avatar crowding the toolbar, and less empty height below it. */
+@media (max-width:480px){
+  .doc, .who, .canvas__bar{ display:none }
+  .canvas{ border-radius:14px; box-shadow:none }
+  .panel{ height:clamp(260px,72vw,320px) }
+}
+
+/* ===================================================== light / dark toggle */
+.themes{ display:flex; gap:2px; padding:3px; border-radius:10px; background:var(--bg-3); flex:0 0 auto }
+.themes button{
+  appearance:none; display:grid; place-items:center; cursor:pointer;
+  width:30px; height:28px; padding:0; border:0; border-radius:8px;
+  background:transparent; color:var(--fg-3);
+  transition:background .14s ease, color .14s ease;
+}
+.themes button:hover{ color:var(--fg) }
+.themes button[aria-pressed="true"]{ background:var(--bg-2); color:var(--fg); box-shadow:var(--shadow) }
+.themes svg{ width:15px; height:15px; display:block; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round }
+
+/* The mark, chromatic. Four offset copies jitter on steps() easing so the
+   fringe snaps rather than drifts, and the bursts are out of phase so they
+   occasionally stack into a genuinely bad frame. Lifted from hah.to. */
+.mark{ position:relative; display:inline-flex; align-items:center; text-decoration:none; flex:0 0 auto }
+.mark svg{ display:block; height:22px; width:auto }
+.mark .mfx-l{ position:absolute; left:0; top:0; opacity:0; will-change:transform }
+.mark.is-live .mfx-l{ opacity:.9 }
+.mark .mfx-top{ position:relative; z-index:1 }
+/* At rest there is no fringe at all, just the mark. The colours appear and
+   start snapping when the cursor comes within 50px (`.is-live`, from a
+   mousemove). */
+.mark .mfx-1{ color:#3a86ff; transform:translate(calc(-2.5px * var(--fx,1)), calc(1px * var(--fx,1))) }
+.mark .mfx-2{ color:#8338ec; transform:translate(calc(1px * var(--fx,1)), calc(-2.2px * var(--fx,1))) skewX(4deg) }
+.mark .mfx-3{ color:#ff006e; transform:translate(calc(3px * var(--fx,1)), calc(.8px * var(--fx,1))) }
+.mark .mfx-4{ color:#ffbe0b; transform:translate(calc(-.8px * var(--fx,1)), calc(2.5px * var(--fx,1))) }
+.mark.is-live .mfx-1{ animation:zap1 2.9s steps(1,end) infinite }
+.mark.is-live .mfx-2{ animation:zap2 3.7s steps(1,end) infinite }
+.mark.is-live .mfx-3{ animation:zap3 3.3s steps(1,end) infinite }
+.mark.is-live .mfx-4{ animation:zap4 4.1s steps(1,end) infinite }
+@keyframes zap1{0%{transform:translate(-1px,0);opacity:.85}7%{transform:translate(-2.5px,1px);opacity:1}9%{transform:translate(-1px,0);opacity:.85}38%{transform:translate(-1.5px,-.5px)}53%{transform:translate(-3.5px,-1.2px);opacity:1}54%{transform:translate(-1.8px,.6px)}56%{transform:translate(-1px,0);opacity:.85}100%{transform:translate(-1px,0)}}
+@keyframes zap2{0%{transform:translate(0,-1px);opacity:.8}21%{transform:translate(1px,-2.2px) skewX(4deg);opacity:1}23%{transform:translate(0,-1px) skewX(0);opacity:.8}47%{transform:translate(.5px,-1.5px)}72%{transform:translate(2px,-3px) skewX(-6deg);opacity:1}73.5%{transform:translate(.6px,-1.5px) skewX(0)}75%{transform:translate(0,-1px);opacity:.8}100%{transform:translate(0,-1px)}}
+@keyframes zap3{0%{transform:translate(1px,0);opacity:.85}13%{transform:translate(1px,0)}14%{transform:translate(3px,.8px);opacity:1}15.5%{transform:translate(1.5px,-.4px)}17%{transform:translate(1px,0);opacity:.85}58%{transform:translate(1.5px,.5px)}83%{transform:translate(3.5px,1.4px);opacity:1}84%{transform:translate(1px,0);opacity:.85}100%{transform:translate(1px,0)}}
+@keyframes zap4{0%{transform:translate(0,1px);opacity:.8}31%{transform:translate(-.8px,2.5px);opacity:1}32.5%{transform:translate(0,1px);opacity:.8}64%{transform:translate(.5px,1.5px)}91%{transform:translate(-1.2px,3.2px);opacity:1}92%{transform:translate(-.4px,1.5px)}93.5%{transform:translate(0,1px);opacity:.8}100%{transform:translate(0,1px)}}
+@media (prefers-reduced-motion:reduce){ .mark.is-live .mfx-l{ animation:none; opacity:.35 } }
+/* The footer's copy is just the mark: no fringe, full strength, 60% size. */
+footer .mark{ color:var(--fg) }
+footer .mark svg{ height:13px }
+footer .mark .mfx-l{ display:none }
+
+/* ================================================================= buttons */
+.copy{
+  appearance:none; cursor:pointer; flex:0 0 auto;
+  display:grid; place-items:center; width:34px; height:32px; padding:0; border-radius:8px;
+  border:1px solid var(--line-2); background:var(--bg-2); color:var(--fg-2);
+  transition:color .14s ease, border-color .14s ease;
+}
+.copy:hover{ color:var(--fg); border-color:var(--fg-3) }
+.copy svg{ width:16px; height:16px; display:block; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round }
+.copy .i-ok{ display:none }
+.copy[data-state="ok"]{ color:var(--ok); border-color:currentColor }
+.copy[data-state="ok"] .i-copy{ display:none }
+.copy[data-state="ok"] .i-ok{ display:block }
+
+/* ============================================================ two doors */
+.links{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+.link{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  min-height:56px; padding:14px 18px; border-radius:14px;
+  border:1px solid var(--line-2); background:var(--bg-2); box-shadow:var(--shadow);
+  font-size:.9375rem; font-weight:550; color:var(--fg); text-decoration:none;
+  transition:background .14s ease, border-color .14s ease;
+}
+.link:hover{ background:var(--bg-3); border-color:var(--fg-3) }
+.link svg{ width:18px; height:18px; display:block; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round }
+@media (max-width:430px){ .links{ gap:10px } .link{ min-height:50px; font-size:.875rem } }
+
+/* ================================================================== footer */
+footer{
+  padding-block:30px 54px; margin-top:clamp(30px,6vw,56px);
+  border-top:1px solid var(--line);
+  display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center;
+  font-size:.8125rem; color:var(--fg-3);
+}
+footer a{ color:var(--fg-2); text-decoration:none }
+footer a:hover{ color:var(--fg) }
+footer .push{ margin-left:auto; display:flex; gap:18px }
+</style>
+<script>
+  /* before paint: no flash of the wrong scheme */
+  try { const t = localStorage.getItem('tip-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+</head>
+
+<body>
+
+<!-- ================================================================== header -->
+<header class="top">
+  <div class="col col--wide top__in">
+    <a class="mark" href="https://hah.to" aria-label="HAH" data-tip="hah.to">
+      <svg class="mfx-l mfx-1" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-l mfx-2" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-l mfx-3" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-l mfx-4" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-top" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+    </a>
+    <nav class="top__nav">
+      <a href="./docs/" data-tip="Attributes, options, accessibility">Docs</a>
+      <a href="https://github.com/extramoose/tooltip" data-tip="Source, issues, MIT license">GitHub</a>
+    </nav>
+    <div class="themes" role="group" aria-label="Color scheme">
+      <button type="button" data-set-theme="light" aria-pressed="false" aria-label="Light" data-tip="Light mode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></svg>
+      </button>
+      <button type="button" data-set-theme="dark" aria-pressed="false" aria-label="Dark" data-tip="Dark mode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13.4A8.2 8.2 0 1 1 10.6 4a6.6 6.6 0 0 0 9.4 9.4Z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================================================ 1. the name -->
+<section class="intro" id="top">
+  <div class="intro__in">
+    <a class="eyebrow" href="https://github.com/extramoose/tooltip" data-tip="Source, issues, MIT license">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      <span>extramoose/tooltip</span>
+    </a>
+    <h1>A tooltip with personality</h1>
+    <p class="lead">Follows the cursor, flips before it runs off the edge, and stays out of the way. One <code>data-tip</code> on any element and you're done.</p>
+    <p class="spec">Vanilla JS, no dependencies, 4.8 kB, MIT.</p>
+
+    <div class="oneline">
+      <code>npm i @extramoose/tooltip</code>
+      <button class="copy" type="button" aria-label="Copy the install command" data-tip="Copy the install command">
+        <svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg>
+        <svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== 2. the stage
+     The panel is this instance's `boundary` and its delegation root, so every
+     pill in here was resolved against that box and not the window. The
+     toolbar is where the handoff shows: walk along it and one pill carries
+     the words from button to button. -->
+<section id="demo">
+  <div class="col col--wide">
+
+    <div class="canvas">
+      <div class="canvas__bar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      </div>
+
+      <div class="panel" id="panel">
+        <canvas class="field" id="field" aria-hidden="true"></canvas>
+        <div class="beam" aria-hidden="true"></div>
+
+        <div class="bar">
+          <button class="ib" type="button" aria-label="Bold" data-canvas data-tip="Bold" data-tip-key="⌘B">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 5h5.2a3.5 3.5 0 0 1 0 7H7.5V5Zm0 7h6a3.5 3.5 0 0 1 0 7H7.5v-7Z"/></svg>
+          </button>
+          <button class="ib" type="button" aria-label="Italic" data-canvas data-tip="Italic" data-tip-key="⌘I">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5h6M8 19h6M14.4 5 9.6 19"/></svg>
+          </button>
+          <button class="ib" type="button" aria-label="Insert a link" data-canvas data-tip="Insert a link" data-tip-key="⌘K">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </button>
+
+          <span class="bar__sep" aria-hidden="true"></span>
+
+          <button class="ib" type="button" aria-label="Add an image" data-canvas data-tip="Add an image" data-tip-key="⌘⇧I">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3.5" width="18" height="17" rx="2.5"/><circle cx="8.6" cy="9.2" r="1.5"/><path d="m21 15-5-5L4.6 20.4"/></svg>
+          </button>
+          <button class="ib" type="button" aria-label="Share this doc" data-canvas data-tip="Share this doc" data-tip-key="⌘⇧S">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.8"/><circle cx="6" cy="12" r="2.8"/><circle cx="18" cy="19" r="2.8"/><path d="m8.5 13.4 7 4.2M15.5 6.4l-7 4.2"/></svg>
+          </button>
+          <button class="ib" type="button" aria-label="More" data-canvas data-tip="More options" data-tip-key="⌘.">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.2" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.8" cy="12" r="1.25" fill="currentColor" stroke="none"/></svg>
+          </button>
+        </div>
+
+        <button class="state doc" type="button" data-canvas
+          data-tip="Top left. Not much room on this side, so it swings the other way.">Untitled doc</button>
+
+        <button class="who" type="button" aria-label="Hunter Hastings" data-canvas
+          data-tip="Top right. Back to the left, with room below.">HH</button>
+
+        <button class="state" type="button" data-canvas
+          data-tip="Bottom left. Nothing fits underneath, so it goes above.">
+          <span aria-hidden="true"></span>Saved
+        </button>
+
+        <button class="ib gear" type="button" aria-label="Settings" data-canvas
+          data-tip="Bottom right, and deliberately long, so you can watch a wide pill hold a tight corner without crossing the frame.">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 14.9a1.5 1.5 0 0 0 .3 1.7l.1.1a1.8 1.8 0 1 1-2.6 2.6l-.1-.1a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.4v.2a1.8 1.8 0 1 1-3.6 0v-.1a1.5 1.5 0 0 0-1-1.4 1.5 1.5 0 0 0-1.7.3l-.1.1a1.8 1.8 0 1 1-2.6-2.6l.1-.1a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.4-.9h-.2a1.8 1.8 0 1 1 0-3.6h.1a1.5 1.5 0 0 0 1.4-1 1.5 1.5 0 0 0-.3-1.7l-.1-.1a1.8 1.8 0 1 1 2.6-2.6l.1.1a1.5 1.5 0 0 0 1.7.3h.1a1.5 1.5 0 0 0 .9-1.4v-.2a1.8 1.8 0 1 1 3.6 0v.1a1.5 1.5 0 0 0 .9 1.4 1.5 1.5 0 0 0 1.7-.3l.1-.1a1.8 1.8 0 1 1 2.6 2.6l-.1.1a1.5 1.5 0 0 0-.3 1.7v.1a1.5 1.5 0 0 0 1.4.9h.2a1.8 1.8 0 1 1 0 3.6h-.1a1.5 1.5 0 0 0-1.4.9Z"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="more">
+  <div class="col col--wide links">
+    <a class="link" href="./docs/" data-tip="Attributes, options, accessibility">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5V5.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/><path d="M9 8h7M9 11.5h7"/></svg>
+      Docs
+    </a>
+    <a class="link" href="https://github.com/extramoose/tooltip" data-tip="Source, issues, MIT license">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" stroke="none" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      GitHub
+    </a>
+  </div>
+</section>
+
+</main>
+
+<footer class="col col--wide">
+  <a class="mark" href="https://hah.to" aria-label="HAH">
+  <svg class="mfx-l mfx-1" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-l mfx-2" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-l mfx-3" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-l mfx-4" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-top" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  </a>
+  <span>MIT © <a href="https://hah.to">Hunter Hastings</a></span>
+  <span class="push">
+    <a href="./docs/">Docs</a>
+    <a href="https://github.com/extramoose/tooltip">GitHub</a>
+    <a href="https://www.npmjs.com/package/@extramoose/tooltip">npm</a>
+  </span>
+</footer>
+
+<script type="module">
+/* The page is the demo: it imports the library off disk, so every pill here
+   is the shipped code running. Nothing below draws a tooltip. */
+import createTooltip from './index.js';
+
+const $ = (s, c = document) => c.querySelector(s);
+
+const still = matchMedia('(prefers-reduced-motion: reduce)');
+
+/* Two instances: the page, which takes the window as its bounds, and the
+   stage, which takes the panel. */
+const pageTip = createTooltip({ selector: '[data-tip]:not([data-canvas])' });
+
+const panel = $('#panel');
+createTooltip({ selector: '[data-canvas]', root: panel, boundary: panel });
+
+
+/* ------------------------------------------------------------------- copy */
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.copy');
+  if (!btn) return;
+  const line = btn.closest('.oneline');
+  const text = line ? $('code', line).textContent : '';
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('aria-hidden', 'true');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (__) {}
+    ta.remove();
+  }
+  // The tooltip is the feedback. On a desktop it is already up and the text
+  // just changes; on a phone nothing would have raised it, so show() does.
+  btn.dataset.state = 'ok';
+  btn.setAttribute('data-tip', 'Copied!');
+  pageTip.show(btn);
+  clearTimeout(btn.__t);
+  btn.__t = setTimeout(() => {
+    btn.dataset.state = '';
+    btn.setAttribute('data-tip', 'Copy the install command');
+    if (!matchMedia('(hover: hover)').matches) pageTip.hide();
+  }, 1400);
+});
+
+/* ================================================================== the field
+   The stage senses the cursor. One fragment shader draws the whole surface:
+   a slow tonal wash between two of the page's own colours, and the dot grid
+   lifting where the pointer is. It is deliberately quiet - if you notice it
+   as a graphic rather than as the room reacting, it is turned up too far.
+
+   It reads its colours off the canvas element, which carries them as plain
+   properties, so the theme toggle and the OS both land without parsing a
+   token by hand. It holds one frame under reduced motion, stops while it is
+   off screen or the tab is hidden, and hands over to a CSS beam where there
+   is no WebGL. */
+const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+const FRAG = `precision mediump float;
+uniform vec2 u_res; uniform vec2 u_ptr; uniform vec3 u_bg; uniform vec3 u_ink;
+uniform vec4 u_dot; uniform float u_t; uniform float u_focus; uniform float u_dpr;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(27.17, 61.31))) * 3271.73); }
+float noise(vec2 p){
+  vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p){
+  float v = 0.0, a = 0.55;
+  for (int i = 0; i < 3; i++){ v += a * noise(p); p *= 2.03; a *= 0.5; }
+  return v;
+}
+void main(){
+  vec2 px = gl_FragCoord.xy / u_dpr;
+  vec2 q = px / u_res.y, m = u_ptr / u_res.y;
+  float near = u_focus * exp(-distance(q, m) * 2.0);
+  float f = fbm((q + (m - q) * near * 0.3) * 2.2 + vec2(u_t * 0.013, u_t * -0.009));
+  vec3 col = mix(u_bg, u_ink, clamp((f - 0.5) * 0.07 + near * 0.075, 0.0, 1.0));
+  float d = 1.0 - smoothstep(0.035, 0.075, length(fract(px / 22.0) - 0.5));
+  col = mix(col, u_dot.rgb, d * u_dot.a * clamp(0.75 + 2.0 * near + (f - 0.5) * 0.7, 0.0, 3.0));
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+(() => {
+  const cv = $('#field');
+
+  /* A context, a program, and the three uniforms' homes. Any failure on the
+     way returns null and the CSS beam takes over. */
+  function boot() {
+    let gl = null;
+    try {
+      gl = cv.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
+    } catch (e) {}
+    if (!gl) return null;
+    const prog = gl.createProgram();
+    for (const [kind, src] of [[gl.VERTEX_SHADER, VERT], [gl.FRAGMENT_SHADER, FRAG]]) {
+      const sh = gl.createShader(kind);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) return null;
+      gl.attachShader(prog, sh);
+    }
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const at = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(at);
+    gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0);
+    const u = {};
+    for (const n of ['u_res', 'u_ptr', 'u_bg', 'u_ink', 'u_dot', 'u_t', 'u_focus', 'u_dpr']) {
+      u[n] = gl.getUniformLocation(prog, n);
+    }
+    return { gl, u };
+  }
+
+  const field = boot();
+  if (!field) panel.classList.add('is-flat');
+
+  const IDLE = .3;                       // how present the pointer is at rest
+  let w = 1, h = 1, dpr = 1;
+  let bg = [0, 0, 0], ink = [1, 1, 1], dot = [0, 0, 0, .1];
+  let tx = 0, ty = 0, mx = 0, my = 0;    // target and eased pointer, CSS px
+  let tf = IDLE, mf = IDLE;
+  let clock = 0, last = 0, raf = 0, on = true, held = false, drift = true;
+
+  const rgba = (s) => {
+    const n = (s || '').match(/[\d.]+/g) || ['0', '0', '0'];
+    return [n[0] / 255, n[1] / 255, n[2] / 255, n[3] === undefined ? 1 : +n[3]];
+  };
+
+  function colors() {
+    const cs = getComputedStyle(cv);
+    bg = rgba(cs.backgroundColor);
+    ink = rgba(cs.color);
+    dot = rgba(cs.borderTopColor);
+  }
+
+  function size() {
+    const r = panel.getBoundingClientRect();
+    w = Math.max(1, Math.round(r.width));
+    h = Math.max(1, Math.round(r.height));
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (!field) return;
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    field.gl.viewport(0, 0, cv.width, cv.height);
+  }
+
+  function draw() {
+    if (!field) {
+      panel.style.setProperty('--mx', mx.toFixed(1) + 'px');
+      panel.style.setProperty('--my', my.toFixed(1) + 'px');
+      panel.style.setProperty('--lit', mf.toFixed(3));
+      return;
+    }
+    const { gl, u } = field;
+    gl.uniform2f(u.u_res, w, h);
+    gl.uniform2f(u.u_ptr, mx, h - my);   // gl counts up from the bottom
+    gl.uniform1f(u.u_t, clock);
+    gl.uniform1f(u.u_focus, mf);
+    gl.uniform1f(u.u_dpr, dpr);
+    gl.uniform3f(u.u_bg, bg[0], bg[1], bg[2]);
+    gl.uniform3f(u.u_ink, ink[0], ink[1], ink[2]);
+    gl.uniform4f(u.u_dot, dot[0], dot[1], dot[2], dot[3]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  function frame(now) {
+    raf = 0;
+    const dt = Math.min(64, now - last) || 16;
+    last = now;
+    if (drift) {                          // nobody is pointing: a slow wander
+      const t = now / 1000;
+      tx = w * (.5 + .26 * Math.sin(t * .21));
+      ty = h * (.5 + .21 * Math.cos(t * .17));
+    }
+    const k = 1 - Math.pow(.05, dt / 1000);
+    mx += (tx - mx) * k;
+    my += (ty - my) * k;
+    mf += (tf - mf) * k;
+    clock += dt / 1000;
+    draw();
+    if (on && !still.matches) raf = requestAnimationFrame(frame);
+  }
+
+  /* Running costs a frame every 16ms, so it only runs when someone could
+     actually be looking at it. */
+  function tick() {
+    if (still.matches) {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      mx = tx = w / 2; my = ty = h * .42; mf = tf = IDLE; clock = 0;
+      draw();                             // one frame, and it stays there
+      return;
+    }
+    if (on && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
+    else if (!on && raf) { cancelAnimationFrame(raf); raf = 0; }
+  }
+
+  function aim(e) {
+    const r = panel.getBoundingClientRect();
+    tx = e.clientX - r.left;
+    ty = e.clientY - r.top;
+    drift = false;
+    tf = 1;
+  }
+  // Leaving parks the field where the cursor left it, dimmed; the wander is
+  // only for before anyone has pointed. Coming back, it chases the cursor.
+  function loose() { tf = IDLE; }
+
+  panel.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch' && !held) return;   // a finger, not a cursor
+    aim(e);
+  }, { passive: true });
+  panel.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') return;
+    held = true;
+    aim(e);
+  }, { passive: true });
+  panel.addEventListener('pointerleave', () => { if (!held) loose(); });
+  // Only a finger lifting dims the field: a mouse click fires the same event
+  // without the cursor having gone anywhere.
+  const lift = () => { if (held) { held = false; loose(); } };
+  addEventListener('pointerup', lift, { passive: true });
+  addEventListener('pointercancel', lift, { passive: true });
+
+  new ResizeObserver(() => { size(); if (!raf) draw(); }).observe(panel);
+  new IntersectionObserver((es) => { on = es[0].isIntersecting && !document.hidden; tick(); })
+    .observe(panel);
+  document.addEventListener('visibilitychange', () => { on = !document.hidden; tick(); });
+  still.addEventListener('change', tick);
+
+  /* The theme moved, either because someone pressed a button or because the
+     OS did. Same answer: read the colours again. */
+  const repaint = () => { colors(); if (!raf) draw(); };
+  new MutationObserver(repaint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
+
+  size();
+  colors();
+  mx = tx = w / 2;
+  my = ty = h * .42;
+  draw();                                 // before the first frame, so the
+  tick();                                 // canvas is never a black hole
+})();
+
+/* Light / dark. The media query decides until someone picks; the pick sticks
+   per browser and clicking the active one hands control back to the system. */
+(() => {
+  const btns = [...document.querySelectorAll('[data-set-theme]')];
+  const sync = () => {
+    const set = document.documentElement.getAttribute('data-theme');
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.setTheme === set)));
+  };
+  btns.forEach(b => b.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === b.dataset.setTheme ? null : b.dataset.setTheme;
+    try {
+      if (next) { document.documentElement.setAttribute('data-theme', next); localStorage.setItem('tip-theme', next); }
+      else { document.documentElement.removeAttribute('data-theme'); localStorage.removeItem('tip-theme'); }
+    } catch (e) {}
+    sync();
+  }));
+  sync();
+})();
+</script>
+<script>
+/* The header mark glitches only while the cursor is within 50px of it. */
+(() => {
+  const mark = document.querySelector('.top .mark');
+  if (!mark || !matchMedia('(hover: hover)').matches) return;
+  let raf = 0, x = 0, y = 0;
+  addEventListener('mousemove', (e) => {
+    x = e.clientX; y = e.clientY;
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const r = mark.getBoundingClientRect();
+      mark.classList.toggle('is-live',
+        x > r.left - 50 && x < r.right + 50 && y > r.top - 50 && y < r.bottom + 50);
+    });
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

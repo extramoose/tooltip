@@ -1,0 +1,1213 @@
+<!doctype html>
+<!--
+  @extramoose/tooltip - the documentation.
+
+  The reference. One hand-written page, no build step: it imports ../index.js
+  off disk, and the property table is read out of the library at load.
+
+  DEPLOY NOTE: this sits one folder down from the library it imports, so GitHub
+  Pages serves it with Settings > Pages > branch: main, folder: / and it lands
+  at /docs/. Nothing it references is outside the published tree.
+
+  Locally:  python3 -m http.server  ->  http://localhost:8000/docs/
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs - @extramoose/tooltip</title>
+<meta name="description" content="Options, the nineteen theming properties, accessibility, reduced motion and touch behavior for @extramoose/tooltip.">
+<meta name="color-scheme" content="light dark">
+<meta name="author" content="Hunter Hastings">
+<link rel="canonical" href="https://tooltip.hah.to/docs/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tooltip.hah.to/docs/">
+<meta property="og:title" content="Docs - @extramoose/tooltip">
+<meta property="og:description" content="Options, the nineteen theming properties, accessibility, reduced motion and touch behavior for @extramoose/tooltip.">
+<meta property="og:image" content="https://tooltip.hah.to/og.png">
+<meta property="og:image:width" content="2400">
+<meta property="og:image:height" content="1260">
+<meta property="og:image:alt" content="A tooltip with personality. A dark pill reading &quot;Rides the cursor, and never runs off the edge&quot; sits beside a cursor.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@hah">
+<meta name="theme-color" content="#fcfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%230f1116"/><rect x="5" y="11" width="22" height="10" rx="5" fill="%23fff"/></svg>'>
+
+
+<style>
+/* ============================================================ design tokens
+   The same tokens as index.html. Two hand-written files with no build step
+   means one honest duplication rather than a pipeline to avoid it. */
+:root{
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --bg:      #fcfcfc;
+  --bg-2:    #ffffff;
+  --bg-3:    #f3f3f4;
+  --fg:      #0f1116;
+  --fg-2:    #575d66;
+  --fg-3:    #888e98;
+  --line:    rgb(16 18 24 / .10);
+  --line-2:  rgb(16 18 24 / .16);
+  --accent:  #2f56cc;
+  --accent-soft: rgb(47 86 204 / .10);
+  --ok:      #0a7048;
+  --code-bg: #f7f7f8;
+  --shadow:  0 1px 2px rgb(16 18 24 / .04), 0 10px 28px rgb(16 18 24 / .06);
+
+  --c-com:#6e7781; --c-str:#0a3069; --c-kw:#cf222e;
+  --c-fn:#8250df;  --c-num:#0550ae; --c-atr:#116329;
+
+  --r: 12px;
+  --col: 48rem;
+  --top-h: 99px;                         /* the sticky header, remeasured by JS */
+  --shell: calc(14rem + 48rem);          /* sidebar + column, so the content
+                                            right edge meets the header's */
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:      #0a0a0b;
+    --bg-2:    #101114;
+    --bg-3:    #17181c;
+    --fg:      #f1f2f4;
+    --fg-2:    #a1a7b0;
+    --fg-3:    #6f757e;
+    --line:    rgb(255 255 255 / .10);
+    --line-2:  rgb(255 255 255 / .18);
+    --accent:  #7d9dff;
+    --accent-soft: rgb(125 157 255 / .14);
+    --ok:      #4ad395;
+    --code-bg: #0e0f12;
+    --shadow:  0 1px 2px rgb(0 0 0 / .5), 0 12px 32px rgb(0 0 0 / .4);
+
+    --c-com:#8b949e; --c-str:#a5d6ff; --c-kw:#ff7b72;
+    --c-fn:#d2a8ff;  --c-num:#79c0ff; --c-atr:#7ee787;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:      #0a0a0b;
+  --bg-2:    #101114;
+  --bg-3:    #17181c;
+  --fg:      #f1f2f4;
+  --fg-2:    #a1a7b0;
+  --fg-3:    #6f757e;
+  --line:    rgb(255 255 255 / .10);
+  --line-2:  rgb(255 255 255 / .18);
+  --accent:  #7d9dff;
+  --accent-soft: rgb(125 157 255 / .14);
+  --ok:      #4ad395;
+  --code-bg: #0e0f12;
+  --shadow:  0 1px 2px rgb(0 0 0 / .5), 0 12px 32px rgb(0 0 0 / .4);
+
+  --c-com:#8b949e; --c-str:#a5d6ff; --c-kw:#ff7b72;
+  --c-fn:#d2a8ff;  --c-num:#79c0ff; --c-atr:#7ee787;
+}
+
+/* ==================================================================== reset */
+*,*::before,*::after{ box-sizing:border-box }
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth }
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:400 1rem/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3,p,ul,ol,dl,dd,figure{ margin:0 }
+button,input,select{ font:inherit; color:inherit }
+a{ color:inherit; text-underline-offset:.18em; text-decoration-color:var(--line-2) }
+a:hover{ text-decoration-color:currentColor }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:5px }
+::selection{ background:var(--accent-soft) }
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto }
+  *,*::before,*::after{ animation-duration:.001ms !important; transition-duration:.001ms !important }
+}
+
+/* =================================================================== layout */
+.col{ width:100%; max-width:var(--col); margin-inline:auto; padding-inline:clamp(20px,5vw,30px) }
+main > section{ padding-block:clamp(34px,5vw,50px) }
+section[id]{ scroll-margin-top:calc(var(--top-h, 99px) + 14px) }
+
+/* hello strip and nav ride together, so the way back never scrolls off */
+.top{ position:sticky; top:0; z-index:6 }
+.bar{
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.bar__in{ max-width:var(--shell);
+  display:flex; align-items:center; gap:16px;
+  padding-block:13px;
+}
+.mark{
+  display:inline-flex; align-items:center; gap:9px; text-decoration:none;
+  font-family:var(--mono); font-size:.8125rem; font-weight:500;
+  letter-spacing:-.01em; color:var(--fg); flex:0 0 auto;
+}
+.mark__glyph{
+  width:22px; height:22px; border-radius:7px; flex:0 0 auto;
+  background:var(--fg); position:relative;
+}
+.mark__glyph::after{
+  content:""; position:absolute; left:4px; top:8px; width:14px; height:6px;
+  border-radius:3px; background:var(--bg);
+}
+.mark span{ color:var(--fg-3) }
+.bar a.nav{ font-size:.8125rem; color:var(--fg-2); text-decoration:none }
+.bar a.nav:hover{ color:var(--fg) }
+.bar .push{ margin-left:auto }
+@media (max-width:430px){ .mark span:not(.mark__glyph){ display:none } }
+
+/* ===================================================================== type */
+h1{ font-size:clamp(1.6rem,4vw,2rem); line-height:1.1; letter-spacing:-.03em; font-weight:600 }
+h2{ font-size:clamp(1.2rem,3vw,1.35rem); line-height:1.24; letter-spacing:-.022em; font-weight:600 }
+h3{ font-size:.9375rem; font-weight:600; letter-spacing:-.008em; margin-top:26px }
+.lead{ font-size:1.05rem; color:var(--fg-2); margin-top:16px }
+p{ color:var(--fg-2); max-width:36em }
+p + p{ margin-top:.85em }
+h2 + p, h3 + p{ margin-top:.5em }
+.note{ font-size:.8125rem; color:var(--fg-3) }
+strong{ color:var(--fg); font-weight:600 }
+code:not(pre code){
+  font-family:var(--mono); font-size:.86em;
+  background:var(--bg-3); border:1px solid var(--line);
+  border-radius:5px; padding:.08em .34em; color:var(--fg);
+  overflow-wrap:break-word;
+}
+.head{ padding-block:clamp(38px,6vw,58px) clamp(6px,2vw,14px) }
+/* ==================================================================== shell
+   Sidebar plus content. The nav is sticky on desktop and becomes a scrolling
+   chip row above the content once there is no room beside it. */
+.shell{
+  display:grid; grid-template-columns:14rem minmax(0,1fr);
+  max-width:var(--shell); margin-inline:auto;
+}
+.shell__main{ min-width:0 }
+.shell__main .col{ margin-inline:0 }
+
+.side{
+  position:sticky; top:calc(var(--top-h, 99px) + 14px); align-self:start;
+  display:flex; flex-direction:column; gap:2px;
+  padding:clamp(22px,4vw,34px) 0 0 clamp(20px,5vw,30px);
+}
+.side a{
+  font-size:.875rem; text-decoration:none; color:var(--fg-3);
+  padding:5px 0; transition:color .14s ease;
+}
+.side a:hover{ color:var(--fg-2) }
+.side a[aria-current="true"]{ color:var(--fg); font-weight:500 }
+
+@media (max-width:900px){
+  /* the sidebar stops sitting beside the content, so everything lines up on
+     the reading column instead of the wider shell */
+  .bar__in, .hello a{ max-width:var(--col) }
+  .shell{ display:block; max-width:none }
+  .shell__main .col{ margin-inline:auto }
+  .side{
+    /* pinned under the header, not left behind at the top of the page */
+    position:sticky; top:var(--top-h, 99px); z-index:4;
+    flex-direction:row; gap:8px;
+    overflow-x:auto; scrollbar-width:none;
+    width:100%; max-width:none; margin-inline:0;
+    padding:0 clamp(20px,5vw,30px);
+    /* solid, not frosted: the bar above it is already translucent and two
+       blurred layers stacked on a phone just reads as mud */
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+  }
+  .side::-webkit-scrollbar{ display:none }
+    .side a{ flex:none; padding:11px 0; white-space:nowrap }
+}
+
+
+/* ===================================================== light / dark toggle */
+.themes{ display:flex; gap:2px; padding:3px; border-radius:10px; background:var(--bg-3); flex:0 0 auto }
+.themes button{
+  appearance:none; display:grid; place-items:center; cursor:pointer;
+  width:30px; height:28px; padding:0; border:0; border-radius:8px;
+  background:transparent; color:var(--fg-3);
+  transition:background .14s ease, color .14s ease;
+}
+.themes button:hover{ color:var(--fg) }
+.themes button[aria-pressed="true"]{ background:var(--bg-2); color:var(--fg); box-shadow:var(--shadow) }
+.themes svg{ width:15px; height:15px; display:block; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round }
+
+/* The mark, chromatic. Four offset copies jitter on steps() easing so the
+   fringe snaps rather than drifts, and the bursts are out of phase so they
+   occasionally stack into a genuinely bad frame. Lifted from hah.to. */
+.mark{ position:relative; display:inline-flex; align-items:center; text-decoration:none; flex:0 0 auto }
+.mark svg{ display:block; height:22px; width:auto }
+.mark .mfx-l{ position:absolute; left:0; top:0; opacity:0; will-change:transform }
+.mark.is-live .mfx-l{ opacity:.9 }
+.mark .mfx-top{ position:relative; z-index:1 }
+/* At rest there is no fringe at all, just the mark. The colours appear and
+   start snapping when the cursor comes within 50px (`.is-live`, from a
+   mousemove). */
+.mark .mfx-1{ color:#3a86ff; transform:translate(calc(-2.5px * var(--fx,1)), calc(1px * var(--fx,1))) }
+.mark .mfx-2{ color:#8338ec; transform:translate(calc(1px * var(--fx,1)), calc(-2.2px * var(--fx,1))) skewX(4deg) }
+.mark .mfx-3{ color:#ff006e; transform:translate(calc(3px * var(--fx,1)), calc(.8px * var(--fx,1))) }
+.mark .mfx-4{ color:#ffbe0b; transform:translate(calc(-.8px * var(--fx,1)), calc(2.5px * var(--fx,1))) }
+.mark.is-live .mfx-1{ animation:zap1 2.9s steps(1,end) infinite }
+.mark.is-live .mfx-2{ animation:zap2 3.7s steps(1,end) infinite }
+.mark.is-live .mfx-3{ animation:zap3 3.3s steps(1,end) infinite }
+.mark.is-live .mfx-4{ animation:zap4 4.1s steps(1,end) infinite }
+@keyframes zap1{0%{transform:translate(-1px,0);opacity:.85}7%{transform:translate(-2.5px,1px);opacity:1}9%{transform:translate(-1px,0);opacity:.85}38%{transform:translate(-1.5px,-.5px)}53%{transform:translate(-3.5px,-1.2px);opacity:1}54%{transform:translate(-1.8px,.6px)}56%{transform:translate(-1px,0);opacity:.85}100%{transform:translate(-1px,0)}}
+@keyframes zap2{0%{transform:translate(0,-1px);opacity:.8}21%{transform:translate(1px,-2.2px) skewX(4deg);opacity:1}23%{transform:translate(0,-1px) skewX(0);opacity:.8}47%{transform:translate(.5px,-1.5px)}72%{transform:translate(2px,-3px) skewX(-6deg);opacity:1}73.5%{transform:translate(.6px,-1.5px) skewX(0)}75%{transform:translate(0,-1px);opacity:.8}100%{transform:translate(0,-1px)}}
+@keyframes zap3{0%{transform:translate(1px,0);opacity:.85}13%{transform:translate(1px,0)}14%{transform:translate(3px,.8px);opacity:1}15.5%{transform:translate(1.5px,-.4px)}17%{transform:translate(1px,0);opacity:.85}58%{transform:translate(1.5px,.5px)}83%{transform:translate(3.5px,1.4px);opacity:1}84%{transform:translate(1px,0);opacity:.85}100%{transform:translate(1px,0)}}
+@keyframes zap4{0%{transform:translate(0,1px);opacity:.8}31%{transform:translate(-.8px,2.5px);opacity:1}32.5%{transform:translate(0,1px);opacity:.8}64%{transform:translate(.5px,1.5px)}91%{transform:translate(-1.2px,3.2px);opacity:1}92%{transform:translate(-.4px,1.5px)}93.5%{transform:translate(0,1px);opacity:.8}100%{transform:translate(0,1px)}}
+@media (prefers-reduced-motion:reduce){ .mark.is-live .mfx-l{ animation:none; opacity:.35 } }
+/* The footer's copy is just the mark: no fringe, full strength, 60% size. */
+footer .mark{ color:var(--fg) }
+footer .mark svg{ height:13px }
+footer .mark .mfx-l{ display:none }
+
+/* A strip above the nav. The strip is only a background - the link is the
+   hit target, so the cursor does not go interactive across the whole width. */
+.hello{
+  background:var(--bg-3); border-bottom:1px solid var(--line);
+  font-size:.8125rem;
+}
+.hello a{
+  display:inline-flex; align-items:center; gap:7px;
+  width:auto; max-width:var(--shell);
+  margin-inline:auto; padding:8px clamp(20px,5vw,30px);
+  color:var(--fg-2); text-decoration:none;
+  transition:color .14s ease;
+}
+.hello a:hover{ color:var(--fg) }
+.hello a:hover svg{ transform:translateX(-2px) }
+.hello svg{
+  width:13px; height:13px; flex:none;
+  fill:none; stroke:currentColor; stroke-width:1.8;
+  stroke-linecap:round; stroke-linejoin:round;
+  transition:transform .16s ease;
+}
+/* the strip spans the page, its contents line up with everything else */
+.hello{ display:flex }
+.hello > a{ margin-inline:0 }
+.hello{ padding-inline:max(0px, calc((100% - var(--shell)) / 2)) }
+
+/* ================================================================= buttons */
+.t{
+  appearance:none; font-size:.8125rem; font-weight:500; line-height:1;
+  padding:10px 13px; border-radius:9px; border:1px solid var(--line-2);
+  background:var(--bg-2); color:var(--fg); cursor:default;
+  transition:background .14s ease, border-color .14s ease;
+}
+.t:hover{ background:var(--bg-3); border-color:var(--fg-3) }
+.t[disabled]{ color:var(--fg-3); background:var(--bg-3); cursor:default }
+a.t{ text-decoration:none; display:inline-block }
+button.t{ cursor:pointer }
+.copy{
+  appearance:none; cursor:pointer; flex:0 0 auto;
+  display:grid; place-items:center; width:30px; height:28px; padding:0; border-radius:7px;
+  border:1px solid var(--line-2); background:var(--bg-2); color:var(--fg-2);
+  transition:color .14s ease, border-color .14s ease;
+}
+.copy:hover{ color:var(--fg); border-color:var(--fg-3) }
+.copy svg{ width:15px; height:15px; display:block; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round }
+.copy .i-ok{ display:none }
+.copy[data-state="ok"]{ color:var(--ok); border-color:currentColor }
+.copy[data-state="ok"] .i-copy{ display:none }
+.copy[data-state="ok"] .i-ok{ display:block }
+
+/* ==================================================================== code */
+.code{
+  border:1px solid var(--line); border-radius:var(--r);
+  background:var(--code-bg); overflow:hidden; margin-top:16px;
+}
+.code__bar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:7px 8px 7px 14px; border-bottom:1px solid var(--line);
+  background:var(--bg-2);
+}
+.code__lang{
+  font-family:var(--mono); font-size:.6875rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--fg-3);
+}
+.code pre{ margin:0; padding:15px 16px; overflow:auto; font:400 .8125rem/1.7 var(--mono); tab-size:2 }
+.code pre code{ font:inherit }
+.c{ color:var(--c-com); font-style:italic }
+.s{ color:var(--c-str) }
+.k{ color:var(--c-kw) }
+.f{ color:var(--c-fn) }
+.n{ color:var(--c-num) }
+.a{ color:var(--c-atr) }
+
+/* ================================================================ reference */
+.defs{ margin-top:18px; border-top:1px solid var(--line) }
+.defs > div{
+  display:grid; grid-template-columns:minmax(9.5rem,auto) 1fr; gap:4px 20px;
+  padding:11px 0; border-bottom:1px solid var(--line);
+}
+.defs dt{ font-family:var(--mono); font-size:.78rem; color:var(--fg); padding-top:2px; overflow-wrap:anywhere }
+.defs dd{ margin:0; font-size:.875rem; color:var(--fg-2) }
+.defs dd em{ font-style:normal; color:var(--fg-3) }
+.defs dd .def{
+  display:block; font-family:var(--mono); font-size:.72rem; color:var(--fg-3);
+  margin-top:3px; overflow-wrap:anywhere;
+}
+@media (max-width:560px){ .defs > div{ grid-template-columns:1fr; gap:3px } }
+
+/* ==================================================================== demos */
+.demo{
+  margin-top:16px; padding:18px;
+  border:1px solid var(--line); border-radius:var(--r);
+  background:var(--bg-2); box-shadow:var(--shadow);
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+}
+.demo__k{ width:100%; font-size:.8125rem; color:var(--fg-3); margin-bottom:-2px }
+.status{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+  margin-top:16px; padding:11px 14px;
+  border:1px solid var(--line); border-radius:var(--r); background:var(--bg-2);
+  font-size:.8125rem; color:var(--fg-2);
+}
+.status code{ font-size:.75rem }
+.status b{ color:var(--fg); font-weight:600 }
+.status .grow{ flex-basis:100%; color:var(--fg-3); font-size:.78rem }
+.wire{
+  display:block; margin-top:14px; padding:11px 13px;
+  border:1px solid var(--line); border-radius:9px; background:var(--code-bg);
+  font-family:var(--mono); font-size:.75rem; line-height:1.6; color:var(--fg-2);
+  white-space:pre-wrap; overflow-wrap:anywhere;
+}
+.wire b{ color:var(--accent); font-weight:550 }
+.kbd{
+  font-family:var(--mono); font-size:.6875rem; font-weight:550;
+  border:1px solid var(--line-2); border-bottom-width:2px; border-radius:6px;
+  padding:3px 6px; background:var(--bg-2); color:var(--fg-2); white-space:nowrap;
+}
+/* icon buttons, for the shortcut row */
+.t.icon{ width:36px; height:36px; padding:0; display:inline-grid; place-items:center }
+.t.icon svg{
+  width:16px; height:16px; display:block;
+  fill:none; stroke:currentColor; stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+/* a cell narrow enough to clip, which is the whole point of data-tip-overflow */
+.cell{
+  max-width:15rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-family:var(--mono); font-size:.78rem; color:var(--fg-2);
+  padding:8px 11px; border:1px solid var(--line); border-radius:8px;
+  background:var(--bg-3);
+}
+
+/* ============================================ one theme block, written here
+   The library ships no named themes, so the "danger" pill further down is
+   styled by this block and nothing else. It is the whole of what a
+   data-tip-theme hook is. */
+[data-tip-theme="danger"]{
+  --tip-bg: #b3261e;
+  --tip-color: #fff;
+  --tip-radius: 8px;
+  --tip-font-weight: 600;
+}
+
+/* ================================================================== footer */
+footer{
+  padding-block:30px 52px; margin-top:clamp(30px,6vw,52px);
+  border-top:1px solid var(--line);
+  display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center;
+  font-size:.8125rem; color:var(--fg-3);
+}
+footer a{ color:var(--fg-2); text-decoration:none }
+footer a:hover{ color:var(--fg) }
+footer .push{ margin-left:auto; display:flex; gap:18px }
+</style>
+<script>
+  /* before paint: no flash of the wrong scheme */
+  try { const t = localStorage.getItem('tip-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+</head>
+
+<body>
+
+<div class="top">
+<div class="hello">
+  <a href="../">
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13 8H3.2M6.8 4 3 8l3.8 4"/></svg>
+    Back to the demo
+  </a>
+</div>
+
+<div class="bar">
+  <div class="col bar__in">
+    <a class="mark" href="https://hah.to" aria-label="hah.to" data-tip="hah.to">
+      <svg class="mfx-l mfx-1" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-l mfx-2" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-l mfx-3" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-l mfx-4" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+      <svg class="mfx-top" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+    </a>
+    <span class="push"></span>
+    <a class="nav" href="https://github.com/extramoose/tooltip">GitHub</a>
+    <div class="themes" role="group" aria-label="Color scheme">
+      <button type="button" data-set-theme="light" aria-pressed="false" aria-label="Light" data-tip="Light mode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></svg>
+      </button>
+      <button type="button" data-set-theme="dark" aria-pressed="false" aria-label="Dark" data-tip="Dark mode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13.4A8.2 8.2 0 1 1 10.6 4a6.6 6.6 0 0 0 9.4 9.4Z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="shell">
+
+<nav class="side" aria-label="Sections">
+  <a href="#attributes">Attributes</a>
+  <a href="#options">Options</a>
+  <a href="#theming">Theming</a>
+  <a href="#a11y">Accessibility</a>
+  <a href="#motion">Reduced motion</a>
+  <a href="#touch">Touch</a>
+  <a href="#details">Details</a>
+  <a href="#source">Source</a>
+</nav>
+
+<div class="shell__main">
+
+<header class="col head">
+  <h1>Docs</h1>
+</header>
+
+<main>
+
+<!-- ========================================================== attributes -->
+<section class="col" id="attributes">
+  <h2>Attributes</h2>
+  <p>Events are delegated from the root, so anything you add to the DOM later picks it up without a re-init.</p>
+
+  <dl class="defs">
+    <div>
+      <dt>data-tip</dt>
+      <dd>
+        The description, rendered with <code>textContent</code>, so no HTML.
+        The pill is <code>pointer-events: none</code>.
+      </dd>
+    </div>
+    <div>
+      <dt>data-tip-key</dt>
+      <dd>
+        A keyboard shortcut, set after the text as a <code>&lt;kbd&gt;</code>
+        chip. Plain text, same as <code>data-tip</code>.
+        <span class="def">class hah-tip__key, tinted from the pill's own text color with color-mix so it lands on either scheme; --tip-key-bg overrides it</span>
+      </dd>
+    </div>
+    <div>
+      <dt>data-tip-pos</dt>
+      <dd>
+        Which side of the cursor the pill prefers: <code>left</code> (the
+        default), <code>right</code> or <code>center</code>. The boundary gets the
+        last word.
+        <span class="def">focus, tap and press ignore it and center on the element's box: focus below it, touch above it</span>
+      </dd>
+    </div>
+    <div>
+      <dt>data-tip-overflow</dt>
+      <dd>
+        Show the pill only when the element is actually clipped, tested as
+        <code>scrollWidth &gt; clientWidth</code>. The words are
+        <code>data-tip</code> if there is one, otherwise the element's own text.
+        <span class="def">the truncated table cell, and the reason the default selector is '[data-tip],[data-tip-overflow]'</span>
+      </dd>
+    </div>
+    <div>
+      <dt>data-tip-theme</dt>
+      <dd>
+        A name for this one trigger, copied onto the pill when it shows. The library ships no
+          names of its own. Write the <code>[data-tip-theme="…"]</code>
+        block yourself. See <a href="#theming">Theming</a>.
+      </dd>
+    </div>
+    <div>
+      <dt>title</dt>
+      <dd>
+        Not a trigger on its own. Put <code>[title]</code> in the selector and
+        the first hover moves that <code>title</code> into <code>data-tip</code>
+        and removes it, so the browser's own tooltip never gets its turn.
+        <span class="def">createTooltip({ selector: '[data-tip], [title]' }) - off by default, since it would make a pill of every title on the page</span>
+      </dd>
+    </div>
+  </dl>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">html</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="html"><code>
+&lt;button data-tip="Deletes the row. There's no undo."&gt;Delete&lt;/button&gt;
+&lt;a href="/pricing" data-tip="Per seat, billed monthly" data-tip-pos="right"&gt;Pricing&lt;/a&gt;
+&lt;button data-tip="Copy to clipboard" data-tip-key="⌘C" aria-label="Copy"&gt;⧉&lt;/button&gt;
+&lt;td class="truncate" data-tip-overflow&gt;content-security-policy-report-only&lt;/td&gt;
+</code></pre>
+  </div>
+
+  <div class="demo">
+    <span class="demo__k">Live - each one of the three sides</span>
+    <button class="t" type="button" data-tip="Left of the cursor, below it. The default, because a right-handed pointer covers what is to its right.">left</button>
+    <button class="t" type="button" data-tip-pos="right" data-tip="Right of the cursor. Useful when the trigger lives on a left rail.">right</button>
+    <button class="t" type="button" data-tip-pos="center" data-tip="Centred under the cursor. This one never flips horizontally; it only clamps.">center</button>
+  </div>
+
+  <div class="demo">
+    <span class="demo__k">Live - a toolbar that tells you the shortcut</span>
+    <button class="t icon" type="button" aria-label="Search" data-tip="Search this project" data-tip-key="/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m15.6 15.6 4.4 4.4"/></svg>
+    </button>
+    <button class="t icon" type="button" aria-label="Copy" data-tip="Copy to clipboard" data-tip-key="⌘C">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 5.6A2.6 2.6 0 0 0 12.4 3H6.6A3.6 3.6 0 0 0 3 6.6v5.8A2.6 2.6 0 0 0 5.6 15"/></svg>
+    </button>
+    <button class="t icon" type="button" aria-label="Undo" data-tip="Undo the last change" data-tip-key="⌘Z">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h11a5 5 0 0 1 0 10H9"/><path d="m8 5-4 4 4 4"/></svg>
+    </button>
+    <button class="t icon" type="button" aria-label="Save" data-tip="Save the draft" data-tip-key="⌘S">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 4v5h6V4M8 20v-6h8v6"/></svg>
+    </button>
+  </div>
+
+  <div class="demo">
+    <span class="demo__k">Live - hover both cells. The clipped one shows its full text, the other stays quiet</span>
+    <span class="cell" data-tip-overflow>content-security-policy-report-only</span>
+    <span class="cell" data-tip-overflow>etag</span>
+  </div>
+</section>
+
+<!-- ============================================================= options -->
+<section class="col" id="options">
+  <h2>Options</h2>
+  <p><code>createTooltip(options)</code> returns a handle. Nothing visual is an option here, because the look and the motion are both CSS.</p>
+
+  <dl class="defs">
+    <div><dt>selector</dt><dd><em>'[data-tip],[data-tip-overflow]'</em> - the trigger selector. Delegated, so later arrivals work.</dd></div>
+    <div><dt>root</dt><dd><em>document</em> - the delegation root. Scope an instance to one subtree by passing an element.</dd></div>
+    <div><dt>offset</dt><dd><em>{ x: 10, y: 16 }</em> - gap from the cursor, in px. Sets <code>--tip-offset-x</code> and <code>--tip-offset-y</code> on the pill.</dd></div>
+    <div><dt>delay</dt><dd><em>150</em> - milliseconds a cold hover waits. The cursor carries on being tracked meanwhile, so the pill lands under the pointer rather than where it came in.
+      <span class="def">a handoff between triggers, and a return within delay of leaving, are both instant; focus never waits</span>
+    </dd></div>
+    <div><dt>touch</dt><dd><em>a long press, except on links</em> - or <code>'press'</code> for links too, <code>'tap'</code>, <code>'off'</code>. What a device with no cursor gets. See <a href="#touch">Touch</a>.</dd></div>
+    <div><dt>theme</dt><dd>A name written to <code>data-tip-theme</code> on every pill this instance shows, for a block you style yourself. A trigger's own <code>data-tip-theme</code> wins over it.</dd></div>
+    <div><dt>boundary</dt><dd><em>the viewport</em> - an element or selector the pill stays inside: a modal, a scroll container, a framed example. The box is re-read every frame, so one that scrolls or resizes still holds. <code>place()</code> takes the same box as an optional <code>bounds</code> rect.</dd></div>
+    <div><dt>injectStyles</dt><dd><em>true</em> - set <code>false</code> and ship the CSS yourself, from the exported <code>css</code> string or <code>@extramoose/tooltip/tooltip.css</code>. For a <code>style-src</code> without <code>'unsafe-inline'</code>.</dd></div>
+    <div><dt>returns</dt><dd><code>{ hide(), show(el), destroy() }</code>. <code>hide()</code> dismisses whatever is showing and cancels a pending delay or a press in progress; <code>show(el)</code> raises the pill anchored to an element the way a tap would, for a "Copied!" on a phone where nothing else would (a no-op if that element's pill is already up: change its <code>data-tip</code> instead); <code>destroy()</code> removes every listener and the pill itself.</dd></div>
+  </dl>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">js</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="js"><code>
+import createTooltip from '@extramoose/tooltip';
+
+const tip = createTooltip({
+  offset: { x: 12, y: 18 },
+  delay: 120,
+  touch: 'press',
+});
+</code></pre>
+  </div>
+
+  <p style="margin-top:16px">
+    A script tag takes the same options off the tag itself:
+    <code>data-selector</code>, <code>data-touch</code>, <code>data-delay</code>,
+    <code>data-theme</code> and <code>data-boundary</code>. The instance it makes
+    is <code>Tooltip.tip</code>.
+  </p>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">html</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="html"><code>
+&lt;script src="https://cdn.jsdelivr.net/npm/@extramoose/tooltip@1"
+        data-touch="press"&gt;&lt;/script&gt;
+</code></pre>
+  </div>
+
+  <p class="note" style="margin-top:14px">
+    Styles inject on the first <code>createTooltip()</code> call, never at import.
+  </p>
+</section>
+
+<!-- ============================================================= theming -->
+<section class="col" id="theming">
+  <h2>Theming</h2>
+  <p>
+    Everything visual is a custom property, read as
+    <code>var(--name, default)</code>. Override it from <code>:root</code> or
+    from a <code>[data-tip-theme]</code> block. Not from a wrapper around the
+    trigger: the pill is appended to <code>document.body</code>.
+  </p>
+  <p>
+    One theme ships, and it inverts with the page on
+    <code>prefers-color-scheme</code>: a dark pill on a light page, a light
+    pill on a dark one. Your overrides win in both.
+  </p>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">css</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="css"><code>
+:root{
+  --tip-bg: #14151a;
+  --tip-color: #fff;
+  --tip-radius: 18px;
+  --tip-shadow: 0 10px 30px rgb(0 0 0 / .22);
+}
+</code></pre>
+  </div>
+
+  <h3>Properties</h3>
+  <p class="note">Defaults, read out of the library at load.</p>
+  <dl class="defs" id="props"><div><dt>loading</dt><dd>reading the library…</dd></div></dl>
+
+  <p class="note" style="margin-top:14px">
+    <code>--tip-offset-x</code>, <code>--tip-offset-y</code> and
+    <code>--tip-margin</code> are read back out of computed style, so those
+    three stay plain px values.
+  </p>
+
+  <h3>Theming one trigger</h3>
+  <p>
+    <code>:root</code> moves every tooltip. <code>data-tip-theme</code> moves
+    one: the library copies the name onto the pill and styles nothing itself.
+    <code>theme</code> sets the same name for a whole instance. A block that
+    leaves <code>--tip-transition</code> alone keeps the motion.
+  </p>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">css</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="css"><code>
+[data-tip-theme="danger"]{
+  --tip-bg: #b3261e;
+  --tip-color: #fff;
+  --tip-radius: 8px;
+  --tip-font-weight: 600;
+}
+</code></pre>
+  </div>
+
+  <div class="demo">
+    <span class="demo__k">Live - that block is in this page's stylesheet</span>
+    <button class="t" type="button" data-tip="The default. It inverts with the page.">default</button>
+    <button class="t" type="button" data-tip-theme="danger" data-tip="Deletes the row. There's no undo.">danger</button>
+  </div>
+</section>
+
+<!-- ======================================================= accessibility -->
+<section class="col" id="a11y">
+  <h2>Accessibility</h2>
+  <p>
+    It isn't hover-only. <code>focusin</code> shows it for a trigger matching
+    <code>:focus-visible</code>. <span class="kbd">Esc</span> dismisses it.
+    Focus and tap anchor to the element's box rather than the pointer, since there's no pointer position to use.
+  </p>
+
+  <div class="demo" id="a11yRow">
+    <span class="demo__k">Live - press <span class="kbd">Tab</span> into this row</span>
+    <button class="t" type="button" data-tip="Publishes the draft to everyone with the link.">Publish</button>
+    <button class="t" type="button" data-tip="Moves this project to the archive. You can restore it later.">Archive</button>
+    <button class="t" type="button" data-tip="Copy to clipboard" aria-label="Copy">⧉</button>
+    <a class="t" href="#a11y" data-tip="An anchor is focusable too, so it behaves the same way.">A link</a>
+  </div>
+  <code class="wire" id="wire">nothing focused</code>
+
+  <h3>A description is not a name</h3>
+  <p>
+    <code>data-tip</code> is wired with <code>aria-describedby</code>: a
+    <strong>description, not an accessible name</strong>. An icon-only button
+    carrying only <code>data-tip</code> is announced as just "button".
+  </p>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">html</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="html"><code>
+&lt;!-- wrong: nothing to announce but "button" --&gt;
+&lt;button data-tip="Copy to clipboard"&gt;⧉&lt;/button&gt;
+
+&lt;!-- right: named by aria-label, described by data-tip --&gt;
+&lt;button data-tip="Copy to clipboard" aria-label="Copy"&gt;⧉&lt;/button&gt;
+</code></pre>
+  </div>
+
+  <p style="margin-top:14px">
+    An <code>aria-describedby</code> the trigger already had is preserved,
+    appended to on show, restored on hide.
+  </p>
+</section>
+
+<!-- ======================================================= reduced motion -->
+<section class="col" id="motion">
+  <h2>Reduced motion</h2>
+  <p>
+    Under <code>prefers-reduced-motion: reduce</code> the pill has no
+    transition. It still follows the cursor.
+  </p>
+
+  <div class="status">
+    <span>Your browser reports <code>prefers-reduced-motion</code>:</span>
+    <b id="rmState">…</b>
+  </div>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">css</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="css"><code>
+@media (prefers-reduced-motion: reduce){
+  .hah-tip__pill{ transition: none; }
+}
+</code></pre>
+  </div>
+</section>
+
+<!-- ================================================================ touch -->
+<section class="col" id="touch">
+  <h2>Touch</h2>
+  <p>
+    A device with no cursor has nothing to ride, so it gets a long press
+    instead. Detection is capability-based and gets re-checked when the input
+    changes, so a laptop with a touchscreen works either way.
+  </p>
+
+  <div class="status">
+    <code>(hover: hover) and (pointer: fine)</code>
+    <b id="ptState">…</b>
+    <span id="ptWhat" class="grow"></span>
+  </div>
+
+  <p style="margin-top:16px">
+    Hold a finger on a trigger for 400 ms and the pill appears above it, centred, and letting go
+    leaves it up. The click that finger makes on the way up is swallowed: you
+    asked what the button does, not for it to do it. A plain tap is never
+    touched.
+  </p>
+
+  <div class="code">
+    <div class="code__bar"><span class="code__lang">js</span><button class="copy" type="button" aria-label="Copy" data-tip="Copy"><svg class="i-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M15 9V6.2A2.2 2.2 0 0 0 12.8 4H6.2A2.2 2.2 0 0 0 4 6.2v6.6A2.2 2.2 0 0 0 6.2 15H9"/></svg><svg class="i-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button></div>
+<pre data-lang="js"><code>
+createTooltip();
+// Hold for 400ms. Let go and it stays up.
+// A tap elsewhere, or any scroll, dismisses it.
+// Tapping the trigger dismisses it, and that tap goes through.
+// Moving more than 10px during the hold is a scroll, so nothing shows.
+</code></pre>
+  </div>
+
+  <p class="note" style="margin-top:14px">
+    None of that can be shown with a mouse, so there's no demo of it here. The
+    context menu stays suppressed for the length of the hold, and the trigger
+    carries <code>data-tip-press</code> while it's held, which is what the
+    injected CSS hangs the text-selection and iOS callout rules off.
+  </p>
+
+  <p style="margin-top:16px">
+    Links are the exception. A long press on a link is also how iOS previews
+    it, so by default links keep theirs, and each link gets a hidden
+    description node wired with <code>aria-describedby</code> instead.
+    <code>touch: 'press'</code> takes the long press on links too.
+  </p>
+
+  <p style="margin-top:16px">
+    <code>touch: 'tap'</code> is the blunter one: the first tap shows the pill
+    and suppresses the click, the second dismisses it and lets the link or the
+    button run. It costs you the first click on every trigger, and press costs
+    you nothing.
+  </p>
+
+  <p>
+    Both put the pill above the element, since a hand covers everything below
+    it, and flip it underneath only when there's no room up there. Keyboard
+    focus still sits below.
+  </p>
+
+  <p>
+    <code>touch: 'off'</code> shows nothing on touch, and wires every
+    trigger's text up with <code>aria-describedby</code> instead. Triggers
+    added after the mode engages don't get one.
+  </p>
+</section>
+
+<!-- ============================================================== details -->
+<section class="col" id="details">
+  <h2>Details</h2>
+  <p>
+    Change <code>data-tip</code> or <code>data-tip-key</code> on the trigger
+    while its pill is up and the pill re-fills and re-places itself. That's the
+    "Copy" to "Copied" case. One MutationObserver, on the active trigger and
+    nothing else.
+  </p>
+
+  <div class="demo">
+    <span class="demo__k">Live - hover it, then click it, and keep hovering</span>
+    <button class="t" id="liveCopy" type="button" data-tip="Copies npm i @extramoose/tooltip" data-tip-key="⌘C">Copy</button>
+  </div>
+
+  <h3>Alt-tab and hidden tabs</h3>
+  <p>
+    A <code>blur</code> on the window, or a <code>visibilitychange</code> to
+    hidden, dismisses the pill. Leave with the cursor parked on a trigger and
+    nothing gets stranded behind you.
+  </p>
+
+  <h3>Disabled triggers</h3>
+  <p>
+    A <code>&lt;button disabled data-tip&gt;</code> raises the pill in Chromium,
+    which has fired mouse events on disabled form controls since 116. Firefox
+    and Safari have historically swallowed those events, and I haven't checked
+    either. Hang <code>data-tip</code> on a wrapping
+    <code>&lt;span&gt;</code> if you need it in every browser.
+  </p>
+
+  <div class="demo">
+    <span class="demo__k">Live - the first is disabled, the second is wrapped</span>
+    <button class="t" type="button" disabled data-tip="Disabled, and still describing itself.">Disabled</button>
+    <span data-tip="The wrapper carries the tip, so the button underneath can be anything."><button class="t" type="button" disabled>Wrapped</button></span>
+  </div>
+</section>
+
+<!-- =============================================================== source -->
+<section class="col" id="source">
+  <h2>Source</h2>
+  <p>
+    One file and no dependencies. The geometry lives in <code>place()</code>, a pure
+    function of numbers, unit-tested with no DOM. Flip then clamp, with
+    asymmetric hysteresis at the edges, so a cursor dragged along an edge can't make it ping-pong. The README has the reasoning.
+  </p>
+
+  <div class="demo" style="box-shadow:none">
+    <a class="t" href="https://github.com/extramoose/tooltip" data-tip="Issues and pull requests welcome, particularly bug reports with a reduced test case.">Repository</a>
+    <a class="t" href="https://github.com/extramoose/tooltip#readme" data-tip="Prior art, and why CSS anchor positioning cannot help here.">README</a>
+    <a class="t" href="https://www.npmjs.com/package/@extramoose/tooltip" data-tip="4.8 kB gzipped, zero dependencies.">npm</a>
+  </div>
+</section>
+
+</main>
+
+</div>
+</div>
+
+<footer class="col">
+  <a class="mark" href="https://hah.to" aria-label="hah.to">
+  <svg class="mfx-l mfx-1" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-l mfx-2" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-l mfx-3" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-l mfx-4" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  <svg class="mfx-top" viewBox="0 0 340 100" aria-hidden="true"><rect width="100" height="100" rx="6" fill="currentColor"/><polygon points="170,4 226,96 114,96" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/><rect x="240" width="100" height="100" rx="6" fill="currentColor"/></svg>
+  </a>
+  <span>MIT © <a href="https://hah.to">Hunter Hastings</a></span>
+  <span class="push">
+    <a href="../">Demo</a>
+    <a href="https://github.com/extramoose/tooltip">GitHub</a>
+    <a href="https://www.npmjs.com/package/@extramoose/tooltip">npm</a>
+  </span>
+</footer>
+
+<script type="module">
+/* ===========================================================================
+   Docs wiring. The library runs here the same way it would on your page, and
+   the property table below is read out of the stylesheet the library exports
+   rather than typed into the markup, so it cannot drift.
+   =========================================================================== */
+import createTooltip, { css as libCss } from '../index.js';
+
+const $  = (s, c = document) => c.querySelector(s);
+const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+
+const docsTip = createTooltip();   // the defaults, and nothing else
+
+/* ------------------------------------------------------- syntax highlight */
+const ENT = { '&':'&amp;', '<':'&lt;', '>':'&gt;' };
+const esc = s => s.replace(/[&<>]/g, c => ENT[c]);
+
+const RE_JS = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*)|(`(?:\\[\s\S]|[^\\`])*`|'(?:\\[\s\S]|[^\\'])*'|"(?:\\[\s\S]|[^\\"])*")|\b(const|let|var|function|return|if|else|for|of|in|while|do|new|typeof|instanceof|class|extends|import|export|default|from|as|try|catch|finally|throw|null|undefined|true|false|this|void|delete|async|await|static|break|continue)\b|\b(\d[\w.]*)\b|([A-Za-z_$][\w$]*)(?=\s*\()/g;
+const RE_CSS = /(\/\*[\s\S]*?\*\/)|(--[\w-]+)|(#[0-9a-fA-F]{3,8})\b|(\[[^\]\n]*\])|\b(\d*\.?\d+(?:px|rem|em|ms|s|%|vw|vh|deg|fr)?)\b|([a-z-]+)(?=\s*:)/g;
+const RE_HTML = /(&lt;!--[\s\S]*?--&gt;)|(&lt;\/?[\w-]+)|("[^"\n]*")|([\w-]+)(?==)/g;
+
+const tag = (cls, txt) => '<span class="' + cls + '">' + txt + '</span>';
+
+function highlight(src, lang){
+  const t = esc(src);
+  if (lang === 'js')
+    return t.replace(RE_JS, (m, c, s, k, n, f) =>
+      c ? tag('c', c) : s ? tag('s', s) : k ? tag('k', k) : n ? tag('n', n) : tag('f', f));
+  if (lang === 'css')
+    return t.replace(RE_CSS, (m, c, v, hex, attr, n, prop) =>
+      c ? tag('c', c) : v ? tag('k', v) : hex ? tag('s', hex)
+        : attr ? tag('f', attr) : n ? tag('n', n) : tag('a', prop));
+  if (lang === 'html')
+    return t.replace(RE_HTML, (m, c, t2, str, attr) =>
+      c ? tag('c', c) : t2 ? tag('k', t2) : str ? tag('s', str) : tag('a', attr));
+  return t;
+}
+
+function dedent(s){
+  const lines = s.replace(/^\n/, '').replace(/\s+$/, '').split('\n');
+  const pads = lines.filter(l => l.trim()).map(l => l.match(/^ */)[0].length);
+  const pad = pads.length ? Math.min.apply(null, pads) : 0;
+  return lines.map(l => l.slice(pad)).join('\n');
+}
+
+function paint(pre, text){
+  const code = $('code', pre);
+  const raw = text !== undefined ? text : dedent(code.textContent);
+  pre.__raw = raw;
+  code.innerHTML = highlight(raw, pre.dataset.lang || '');
+}
+$$('pre[data-lang]').forEach(pre => paint(pre));
+
+/* ------------------------------------------------------------------- copy */
+function textToCopy(btn){
+  const box = btn.closest('.code');
+  if (!box) return '';
+  const pre = $('pre', box);
+  return pre ? (pre.__raw !== undefined ? pre.__raw : pre.textContent) : '';
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.copy');
+  if (!btn) return;
+  const text = textToCopy(btn);
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('aria-hidden', 'true');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (__) {}
+    ta.remove();
+  }
+  btn.dataset.state = 'ok';
+  btn.setAttribute('data-tip', 'Copied!');
+  docsTip.show(btn);                     // a phone has nothing else to raise it
+  clearTimeout(btn.__t);
+  btn.__t = setTimeout(() => {
+    btn.dataset.state = '';
+    btn.setAttribute('data-tip', 'Copy');
+    if (!matchMedia('(hover: hover)').matches) docsTip.hide();
+  }, 1400);
+});
+
+/* --------------------------------------------------------- live tip text
+   The pill watches the active trigger, so swapping the attributes under it
+   re-fills and re-places it without the tooltip leaving. */
+const liveCopy = $('#liveCopy');
+liveCopy.addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText('npm i @extramoose/tooltip'); } catch (_) {}
+  liveCopy.setAttribute('data-tip', 'Copied');
+  liveCopy.removeAttribute('data-tip-key');
+  clearTimeout(liveCopy.__t);
+  liveCopy.__t = setTimeout(() => {
+    liveCopy.setAttribute('data-tip', 'Copies npm i @extramoose/tooltip');
+    liveCopy.setAttribute('data-tip-key', '⌘C');
+  }, 1300);
+});
+
+/* ================================================== the property reference
+   Defaults are not transcribed. They come out of the stylesheet the library
+   exports, by walking the balanced parens of each var() fallback. The pill
+   inverts with the page, so the dark half is read separately and shown as the
+   second value rather than quietly overwriting the first. */
+const WHAT = {
+  '--tip-bg': 'The fill. Any background value, a gradient included.',
+  '--tip-color': 'Text color.',
+  '--tip-border': 'Border shorthand. Zero for none.',
+  '--tip-radius': 'Corner radius.',
+  '--tip-padding': 'Padding shorthand.',
+  '--tip-shadow': 'Box-shadow. Multiple layers are fine.',
+  '--tip-font-family': 'Font stack for the pill only.',
+  '--tip-font-size': 'Type size.',
+  '--tip-font-weight': 'Type weight.',
+  '--tip-letter-spacing': 'Tracking.',
+  '--tip-line-height': 'Leading, for descriptions that wrap.',
+  '--tip-max-width': 'Where the text starts wrapping.',
+  '--tip-z': 'Stacking order of the pill.',
+  '--tip-scale': 'Where the pop animation starts from.',
+  '--tip-transition': 'The enter. Springs up from --tip-scale by default.',
+  '--tip-offset-x': 'Horizontal gap from the cursor. Read back by the script, so plain px.',
+  '--tip-offset-y': 'Vertical gap from the cursor. Read back by the script, so plain px.',
+  '--tip-margin': 'Minimum gap to the viewport edge. Read back by the script, so plain px.',
+  '--tip-key-bg': 'Background of the data-tip-key chip. Tinted from the text color by default.',
+};
+const CONTRACT = Object.keys(WHAT);
+
+function fallbacks(src){
+  const found = new Map();
+  const re = /var\((--tip-[\w-]+)\s*,/g;
+  let m;
+  while ((m = re.exec(src))) {
+    let i = re.lastIndex, depth = 1, v = '';
+    while (i < src.length) {
+      const ch = src[i];
+      if (ch === '(') depth++;
+      else if (ch === ')' && --depth === 0) break;
+      v += ch; i++;
+    }
+    if (!found.has(m[1])) found.set(m[1], v.trim());   // first wins
+  }
+  return found;
+}
+
+(function buildProps(){
+  const cut = libCss.indexOf('@media (prefers-color-scheme: dark)');
+  const light = fallbacks(cut < 0 ? libCss : libCss.slice(0, cut));
+  const night = cut < 0 ? new Map() : fallbacks(libCss.slice(cut));
+  const names = CONTRACT.filter(n => light.has(n))
+    .concat([...light.keys()].filter(n => !CONTRACT.includes(n)));
+
+  const dl = $('#props');
+  dl.textContent = '';
+  for (const n of names) {
+    const row = document.createElement('div');
+    const dt = document.createElement('dt');
+    dt.textContent = n;
+    const dd = document.createElement('dd');
+    dd.textContent = WHAT[n] || '';
+    const def = document.createElement('span');
+    def.className = 'def';
+    const d = night.get(n);
+    def.textContent = d && d !== light.get(n)
+      ? light.get(n) + '   /   ' + d + ' on a dark page'
+      : light.get(n);
+    dd.appendChild(def);
+    row.append(dt, dd);
+    dl.appendChild(row);
+  }
+})();
+
+/* ================================================== accessibility read-out */
+const wire = $('#wire');
+const a11yRow = $('#a11yRow');
+
+function renderWire(){
+  const el = $('[aria-describedby]', a11yRow);
+  if (!el) { wire.textContent = 'nothing focused'; return; }
+  const t = el.tagName.toLowerCase();
+  const text = el.getAttribute('data-tip');
+  const short = text.length > 32 ? text.slice(0, 31) + '…' : text;
+  wire.textContent = '<' + t + ' data-tip="' + short + '" ';
+  const b = document.createElement('b');
+  b.textContent = 'aria-describedby="' + el.getAttribute('aria-describedby') + '"';
+  wire.appendChild(b);
+  wire.appendChild(document.createTextNode('>'));
+}
+new MutationObserver(renderWire).observe(a11yRow, {
+  subtree: true, attributes: true, attributeFilter: ['aria-describedby'],
+});
+renderWire();
+
+/* ================================================ reduced motion and touch */
+const rm = matchMedia('(prefers-reduced-motion: reduce)');
+const rmState = $('#rmState');
+const syncRm = () => { rmState.textContent = rm.matches ? 'reduce' : 'no-preference'; };
+rm.addEventListener('change', syncRm);
+syncRm();
+
+const canHover = matchMedia('(hover: hover) and (pointer: fine)');
+const ptState = $('#ptState');
+const ptWhat = $('#ptWhat');
+function syncPointer(){
+  ptState.textContent = canHover.matches ? 'matches' : 'does not match';
+  ptWhat.textContent = canHover.matches
+    ? 'So this browser is on the cursor path: hover and focus both show the pill.'
+    : 'So the pill stays out of the way here. Every trigger on this page still carries its description for assistive technology.';
+}
+canHover.addEventListener('change', syncPointer);
+syncPointer();
+
+/* The sticky header's height, published as --top-h. The sidebar hangs off it
+   and so does every section's scroll-margin, so a hard-coded number would put
+   headings under the bar the moment the font or the wrapping changed. */
+(() => {
+  const top = document.querySelector('.top');
+  if (!top) return;
+  const publish = () =>
+    document.documentElement.style.setProperty('--top-h', top.offsetHeight + 'px');
+  publish();
+  if (window.ResizeObserver) new ResizeObserver(publish).observe(top);
+  else addEventListener('resize', publish, { passive: true });
+})();
+
+/* Sidebar scroll-spy. Measures the sections directly on each scroll rather
+   than caching what an observer last reported, because an observer only fires
+   for the element that crossed and the rest of the cache goes stale. */
+(() => {
+  const side = document.querySelector('.side');
+  const links = [...document.querySelectorAll('.side a')];
+  const secs = links
+    .map(a => ({ a, el: document.getElementById(a.getAttribute('href').slice(1)) }))
+    .filter(s => s.el);
+  if (!secs.length) return;
+
+  let last = null;
+  const mark = () => {
+    // the header is sticky, so "current" is whatever is under its bottom edge
+    const line = (parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--top-h')) || 99) + 42;
+    let cur = secs[0];
+    for (const s of secs) if (s.el.getBoundingClientRect().top <= line) cur = s;
+    // at the very bottom the last section may never reach the line
+    if (innerHeight + scrollY >= document.body.scrollHeight - 2) cur = secs[secs.length - 1];
+    for (const s of secs) {
+      if (s === cur) s.a.setAttribute('aria-current', 'true');
+      else s.a.removeAttribute('aria-current');
+    }
+    // Narrow screens turn the sidebar into a chip row that scrolls sideways,
+    // and the active chip was free to sit off the end of it where nobody could
+    // see which section they were in. Nudge it into the middle, but only when
+    // the row really does overflow - on desktop this must not move anything.
+    if (cur !== last && side && side.scrollWidth > side.clientWidth + 1) {
+      side.scrollTo({
+        left: cur.a.offsetLeft - (side.clientWidth - cur.a.offsetWidth) / 2,
+        behavior: last ? 'smooth' : 'auto',
+      });
+    }
+    last = cur;
+  };
+
+  addEventListener('scroll', mark, { passive: true });
+  addEventListener('resize', mark, { passive: true });
+  mark();
+})();
+
+/* Light / dark. The media query decides until someone picks; the pick sticks
+   per browser and clicking the active one hands control back to the system. */
+(() => {
+  const btns = [...document.querySelectorAll('[data-set-theme]')];
+  const sync = () => {
+    const set = document.documentElement.getAttribute('data-theme');
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.setTheme === set)));
+  };
+  btns.forEach(b => b.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === b.dataset.setTheme ? null : b.dataset.setTheme;
+    try {
+      if (next) { document.documentElement.setAttribute('data-theme', next); localStorage.setItem('tip-theme', next); }
+      else { document.documentElement.removeAttribute('data-theme'); localStorage.removeItem('tip-theme'); }
+    } catch (e) {}
+    sync();
+  }));
+  sync();
+})();
+</script>
+<script>
+/* The header mark glitches only while the cursor is within 50px of it. */
+(() => {
+  const mark = document.querySelector('.bar .mark');
+  if (!mark || !matchMedia('(hover: hover)').matches) return;
+  let raf = 0, x = 0, y = 0;
+  addEventListener('mousemove', (e) => {
+    x = e.clientX; y = e.clientY;
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const r = mark.getBoundingClientRect();
+      mark.classList.toggle('is-live',
+        x > r.left - 50 && x < r.right + 50 && y > r.top - 50 && y < r.bottom + 50);
+    });
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

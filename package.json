@@ -1,0 +1,59 @@
+{
+  "name": "@extramoose/tooltip",
+  "version": "1.0.1",
+  "description": "The tooltip that rides the cursor. Vanilla JS, zero dependencies, 4.8 kB gzipped.",
+  "keywords": [
+    "tooltip",
+    "cursor",
+    "vanilla",
+    "zero-dependency",
+    "esm",
+    "accessibility"
+  ],
+  "license": "MIT",
+  "author": "Hunter Hastings <h@hah.to>",
+  "homepage": "https://tooltip.hah.to",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/extramoose/tooltip.git"
+  },
+  "bugs": {
+    "url": "https://github.com/extramoose/tooltip/issues"
+  },
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "unpkg": "./dist/tooltip.global.js",
+  "jsdelivr": "./dist/tooltip.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./tooltip.css": "./dist/tooltip.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "dist"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "types": "tsc -p tsconfig.json",
+    "test": "node --test",
+    "lint:pkg": "publint",
+    "prepublishOnly": "npm run build && npm run types",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "esbuild": "^0.25.0",
+    "publint": "^0.3.0",
+    "typescript": "^5.7.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One job. This is a browser library with no runtime dependencies: a Node matrix
+# would test the same three lines of build script on four runtimes and tell us
+# nothing about the only environment that matters.
+#
+# Two suites, deliberately split. `node --test` runs the geometry - the part
+# that is actually hard - with nothing installed, so it can never be the flaky
+# step. The browser suite needs a Chromium download, so it runs last: if it
+# ever does go flaky, the signal that matters has already been collected.
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Before publint and the tests: the exports map points at dist/.
+      - name: Build
+        run: npm run build
+
+      # index.d.ts is committed, so regenerating it must be a no-op. A diff here
+      # means someone changed the JSDoc in index.js and did not run `npm run types`.
+      - name: Types
+        run: |
+          npm run types
+          git diff --exit-code -- index.d.ts
+
+      - name: Test (geometry, no browser)
+        run: node --test
+
+      - name: Package lint
+        run: npx publint
+
+      - name: Test (DOM, real browser)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
