@@ -1,0 +1,60 @@
+name: Release
+
+# Publishing happens here and nowhere else. Cutting a GitHub Release on a
+# tag publishes exactly that commit to npm, with provenance, so the version
+# on the registry can be traced back to the SHA it was built from.
+#
+# No token lives in this repo. npm's trusted publishing lets this workflow
+# mint a short-lived credential from GitHub's OIDC identity, which is why
+# `id-token: write` is the only permission it asks for beyond reading the
+# tree. The package has to be configured for it once on npmjs.com:
+# Settings > Trusted publisher > GitHub Actions, repo extramoose/tooltip,
+# workflow release.yml.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      # The tag and package.json have to agree, or the registry ends up with
+      # a version nobody can find in the history.
+      - name: Tag matches package.json
+        run: |
+          tag="${{ github.event.release.tag_name }}"
+          pkg="v$(node -p "require('./package.json').version")"
+          test "$tag" = "$pkg" || { echo "tag $tag != package $pkg"; exit 1; }
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Types
+        run: |
+          npm run types
+          git diff --exit-code -- index.d.ts
+
+      - name: Test
+        run: node --test
+
+      - name: Package lint
+        run: npx publint
+
+      - name: Publish
+        run: npm publish --provenance --access public
