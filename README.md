@@ -196,4 +196,4 @@ CSS anchor positioning went Baseline this year and still can't help, because a t
 
 ## License
 
-MIT. Issues and PRs welcome, just run `npm test` first. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/); [release-please](https://github.com/googleapis/release-please) turns them into the [changelog](CHANGELOG.md) and the releases, and every release is published to npm from GitHub with provenance.
+MIT. Issues and PRs welcome, see [CONTRIBUTING.md](CONTRIBUTING.md); vulnerabilities go through [SECURITY.md](SECURITY.md), not the issue tracker. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/); [release-please](https://github.com/googleapis/release-please) turns them into the [changelog](CHANGELOG.md) and the releases, and every release is published to npm from GitHub with provenance.
