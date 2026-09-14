@@ -1,6 +1,6 @@
 {
   "name": "@extramoose/tooltip",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The tooltip that rides the cursor. Vanilla JS, zero dependencies, 4.8 kB gzipped.",
   "keywords": [
     "tooltip",

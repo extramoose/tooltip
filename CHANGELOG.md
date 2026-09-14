@@ -2,6 +2,15 @@
 
 Entries from 1.0.2 on are written by release-please from the commit history.
 
+## [1.0.2](https://github.com/extramoose/tooltip/compare/v1.0.1...v1.0.2) (2026-09-14)
+
+
+### Docs
+
+* a fuller CONTRIBUTING.md, and the Contributor Covenant 3.0 ([725505a](https://github.com/extramoose/tooltip/commit/725505a0b251eeb93fdeb2b7263d5d2cc416dbf5))
+* a pinned, integrity-checked script tag; cookieless analytics on the site ([#4](https://github.com/extramoose/tooltip/issues/4)) ([3a04205](https://github.com/extramoose/tooltip/commit/3a04205de9cc451ad832422666c7a3bbc985ebfc))
+* CONTRIBUTING.md and SECURITY.md ([c92c983](https://github.com/extramoose/tooltip/commit/c92c983a2cab1766cea01a4fd00f5b422d3674aa))
+
 ## 1.0.1 (2026-09-14)
 
 ### Features
