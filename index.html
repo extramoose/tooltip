@@ -6,9 +6,10 @@
   this is the shipped library running. The reference lives in docs/.
 
   DEPLOY NOTE: this page sits at the repository root beside the library it
-  imports, so GitHub Pages serves it with Settings > Pages > branch: main,
-  folder: / and the demo lands at the repo's own URL. Nothing it references
-  is outside the published tree.
+  imports. .github/workflows/pages.yml copies exactly what the site needs
+  (this file, index.js, docs/index.html, og.png, llms.txt) into a clean
+  directory and deploys that, so nothing else in the repository becomes a
+  public URL.
 
   Locally:  python3 -m http.server  ->  http://localhost:8000/
 -->
