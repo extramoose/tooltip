@@ -1,30 +1,51 @@
 name: Release
 
-# Publishing happens here and nowhere else. Cutting a GitHub Release on a
-# tag publishes exactly that commit to npm, with provenance, so the version
-# on the registry can be traced back to the SHA it was built from.
+# The whole release path, and the only one.
 #
-# No token lives in this repo. npm's trusted publishing lets this workflow
-# mint a short-lived credential from GitHub's OIDC identity, which is why
-# `id-token: write` is the only permission it asks for beyond reading the
-# tree. The package has to be configured for it once on npmjs.com:
-# Settings > Trusted publisher > GitHub Actions, repo extramoose/tooltip,
-# workflow release.yml.
+#   1. Commits on main follow Conventional Commits (feat:, fix:, docs:, ...).
+#   2. release-please keeps a release PR open: it bumps the version, writes
+#      the CHANGELOG entry from those commits, and waits.
+#   3. Merging that PR tags the commit and publishes a GitHub Release.
+#   4. The publish job below runs on that same commit and pushes it to npm
+#      with provenance, so the registry version traces back to the SHA.
+#
+# No token lives in this repo. release-please uses the workflow's own
+# GITHUB_TOKEN, and npm's trusted publishing mints a short-lived credential
+# from GitHub's OIDC identity - which is why the publish job is in this
+# workflow rather than on a `release: published` trigger: releases created
+# by GITHUB_TOKEN do not fire other workflows. The package has to be
+# configured for it once on npmjs.com: Settings > Trusted publisher >
+# GitHub Actions, repo extramoose/tooltip, workflow release.yml.
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 jobs:
-  publish:
+  release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
+        id: rp
+
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.release-please.outputs.tag_name }}
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -36,7 +57,7 @@ jobs:
       # a version nobody can find in the history.
       - name: Tag matches package.json
         run: |
-          tag="${{ github.event.release.tag_name }}"
+          tag="${{ needs.release-please.outputs.tag_name }}"
           pkg="v$(node -p "require('./package.json').version")"
           test "$tag" = "$pkg" || { echo "tag $tag != package $pkg"; exit 1; }
 
