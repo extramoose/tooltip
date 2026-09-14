@@ -1,12 +1,11 @@
 name: Pages
 
-# The site is deployed from here, not from the branch. Deploying a branch
-# root serves every file in the repository as a public URL - package.json,
-# the test suites, the build script - which is not what a website is. This
-# assembles exactly the files the two pages need and ships only those.
-#
-# Nothing is built: the pages import index.js off disk on purpose, so what
-# the site runs is the source that was reviewed.
+# The site lives in site/ and is deployed from here, not from a branch.
+# Library code and site code stay apart: site/ has the two pages, the card,
+# llms.txt and the domain file, and nothing else in the repository becomes
+# a public URL. index.js is copied in at deploy time - the pages import it
+# off disk on purpose, so what the site runs is the source that was
+# reviewed. Locally, `npm run site` does the same with a symlink.
 on:
   push:
     branches: [main]
@@ -31,12 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Assemble the site
+      - name: Put the library beside the pages
         run: |
-          mkdir -p site/docs
-          cp index.html index.js og.png llms.txt site/
-          cp docs/index.html site/docs/
-          test -f CNAME && cp CNAME site/
+          cp index.js site/index.js
           find site -type f | sort
 
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
