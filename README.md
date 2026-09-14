@@ -29,6 +29,15 @@ Options ride on the tag itself: `data-selector`, `data-touch`, `data-delay`, `da
 <script src="https://cdn.jsdelivr.net/npm/@extramoose/tooltip@1" data-touch="press"></script>
 ```
 
+`@1` floats to the newest 1.x. To audit once and pin, use the exact version with an integrity hash (this is 1.0.1; any version's hash is `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A`):
+
+```html
+<script
+  src="https://cdn.jsdelivr.net/npm/@extramoose/tooltip@1.0.1/dist/tooltip.global.js"
+  integrity="sha384-O31yeI3XmXgNT9WOeIPoBs5uqbcD2o5Fof+C+uC+PFpYaVEn0XmdCJAJ856l+F/i"
+  crossorigin="anonymous"></script>
+```
+
 Or call it yourself.
 
 ```js

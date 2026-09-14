@@ -819,5 +819,42 @@ void main(){
 })();
 </script>
 
+<!-- Analytics. PostHog, the same project as hah.to, and cookieless: memory
+     persistence, no autocapture, no recording, so nothing is stored in the
+     browser and nobody is identified. Four named events and the pageview.
+     Off on dev hosts unless ?ph=1 is in the URL. -->
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+</script>
+<script>
+(function () {
+  var DEV = { 'localhost': 1, '127.0.0.1': 1, '100.69.197.98': 1 };
+  if (DEV[location.hostname] && !/[?&]ph=1/.test(location.search)) return;
+  posthog.init('phc_Gia2a5GDQdZzrtZAXsTodh5xL3vkB7zdhQ1KTw4aHT8', {
+    api_host: 'https://us.i.posthog.com',
+    defaults: '2026-01-30',
+    person_profiles: 'identified_only',
+    persistence: 'memory',
+    autocapture: false,
+    capture_pageview: true,
+    capture_pageleave: true,
+    disable_session_recording: true,
+    enable_heatmaps: false
+  });
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href], button.copy');
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    var name = a.matches('.copy') ? 'copy'
+      : /github\.com/.test(href) ? 'github'
+      : /npmjs\.com/.test(href) ? 'npm'
+      : /\/docs\//.test(href) ? 'docs' : null;
+    if (!name) return;
+    var zone = a.closest('header, footer, main');
+    posthog.capture(name, { where: zone ? zone.tagName.toLowerCase() : 'page' });
+  }, true);
+})();
+</script>
+
 </body>
 </html>
