@@ -11,10 +11,14 @@ auto.js             the script-tag entry: re-exports index.js and initialises it
 build.mjs           esbuild: dist/tooltip.global.js (IIFE) and dist/tooltip.css
 test/place.test.js  the geometry suite, node:test, no browser
 e2e/tooltip.spec.js the DOM suite, Playwright, real Chromium
-index.html          the demo page, imports ./index.js off disk
-docs/index.html     the reference, same
-llms.txt            the reference again, in one file, for models
-og.html / og.png    the social card, and the page it is screenshotted from
+site/               the website, kept apart from the library:
+  index.html          the demo page, imports ./index.js off disk
+  docs/index.html     the reference, same
+  llms.txt            the reference again, in one file, for models
+  og.html / og.png    the social card, and the page it is screenshotted from
+  CNAME               the domain
+.github/workflows/  ci.yml (checks), release.yml (release-please + npm),
+                    pages.yml (deploys site/ with index.js copied in)
 ```
 
 `index.js` splits in two. `place()` is a pure function of numbers: cursor, pill size, viewport, previous placement in, coordinates and sides out. It has no DOM and no globals, which is why the geometry suite runs with nothing installed and covers thousands of cases in a quarter of a second. Everything else in the file is event plumbing around it: `createTooltip()` wires listeners, measures once per show, and writes one transform per frame.
@@ -30,13 +34,13 @@ npm ci
 npx playwright install chromium     # once, for the DOM suite
 ```
 
-To see the demo and the docs, serve the repo root and open `/` or `/docs/`:
+To see the demo and the docs:
 
 ```sh
-python3 -m http.server 8000
+npm run site        # links index.js into site/ and serves it on :8000
 ```
 
-No build step is needed for that. Both pages import `index.js` directly, so what you see is the source you just edited.
+Open `/` or `/docs/`. No build step: both pages import `index.js` directly, so what you see is the source you just edited. The deploy does the same copy, so the site never runs anything but the reviewed source.
 
 ## Running the checks
 
@@ -55,12 +59,12 @@ CI runs exactly those, in that order, on every push and PR. Run them locally fir
 1. Branch from `main`.
 2. Make the change in `index.js`. If it touches geometry, it goes in `place()` and gets a case in `test/place.test.js`. If it touches wiring, it gets a case in `e2e/tooltip.spec.js`. A fix without a test that would have caught it is not finished.
 3. If you changed any JSDoc, run `npm run types` and commit `index.d.ts` with it.
-4. If you added or renamed an option, attribute, or `--tip-*` property, update all three references: the README, `docs/index.html`, and `llms.txt`. They are cross-checked by hand before a release and drift is treated as a bug. The docs page reads the property list out of the CSS at load, so a new property shows up there on its own, but it still needs a description in the `WHAT` map in that file.
+4. If you added or renamed an option, attribute, or `--tip-*` property, update all three references: the README, `site/docs/index.html`, and `site/llms.txt`. They are cross-checked by hand before a release and drift is treated as a bug. The docs page reads the property list out of the CSS at load, so a new property shows up there on its own, but it still needs a description in the `WHAT` map in that file.
 5. Check the size. The number in the README is the minified ESM build, gzipped:
    ```sh
    node -e "const e=require('esbuild'),z=require('zlib');e.build({entryPoints:['index.js'],bundle:true,format:'esm',minify:true,write:false}).then(r=>console.log(z.gzipSync(r.outputFiles[0].contents,{level:9}).length))"
    ```
-   If your change moves it past the next tenth of a kilobyte, say so in the PR and update the number everywhere it appears (README, package.json description, both HTML pages, `llms.txt`, `og.html`, and regenerate `og.png` with the command in its header).
+   If your change moves it past the next tenth of a kilobyte, say so in the PR and update the number everywhere it appears (README, package.json description, both pages in `site/`, `site/llms.txt`, `site/og.html`, and regenerate `site/og.png` with the command in its header).
 6. Open a PR against `main`. Describe what changed and why, and what a reviewer should try with a cursor to see it.
 
 ## What's welcome

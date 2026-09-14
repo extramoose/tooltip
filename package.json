@@ -45,7 +45,8 @@
     "test": "node --test",
     "lint:pkg": "publint",
     "prepublishOnly": "npm run build && npm run types",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "site": "ln -sfn ../index.js site/index.js && python3 -m http.server -d site 8000"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

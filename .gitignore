@@ -10,3 +10,5 @@ STATE.md
 
 # publish artifacts
 *.tgz
+# The site imports the library from beside itself; `npm run site` links it, the deploy copies it.
+site/index.js

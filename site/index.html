@@ -5,12 +5,12 @@
   One hand-written file, no build step: it imports ./index.js off disk, so
   this is the shipped library running. The reference lives in docs/.
 
-  DEPLOY NOTE: this page sits at the repository root beside the library it
-  imports, so GitHub Pages serves it with Settings > Pages > branch: main,
-  folder: / and the demo lands at the repo's own URL. Nothing it references
-  is outside the published tree.
+  DEPLOY NOTE: the site lives in site/, apart from the library. This page
+  imports ./index.js, which .github/workflows/pages.yml copies in from the
+  repository root at deploy time, so the site runs the reviewed source and
+  nothing else in the repository becomes a public URL.
 
-  Locally:  python3 -m http.server  ->  http://localhost:8000/
+  Locally:  npm run site  ->  http://localhost:8000/
 -->
 <html lang="en">
 <head>
