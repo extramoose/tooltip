@@ -1,0 +1,10 @@
+# Keeps the SHA-pinned actions in .github/workflows current. Dependabot
+# bumps the pin and the version comment together, as a PR that CI checks.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
